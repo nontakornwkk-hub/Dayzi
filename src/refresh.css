@@ -1,0 +1,143 @@
+/* ===== แชทแบบ Claude: ประวัติด้านซ้าย บทสนทนากึ่งกลาง ===== */
+.page-assistant .main-footer{display:none}
+.claude-chat{flex:1;min-height:0;display:grid;grid-template-columns:260px minmax(0,1fr);gap:0;background:var(--focus-surface);border:1px solid var(--focus-line);border-radius:22px;overflow:hidden;position:relative}
+.chat-history{display:flex;flex-direction:column;gap:10px;padding:16px 12px;background:var(--focus-raised);border-right:1px solid var(--focus-line);min-height:0}
+.chat-history h3{font-size:12px;font-weight:600;color:var(--focus-muted);padding:6px 8px 0;letter-spacing:.02em}
+.new-chat{display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:13px;background:var(--focus-surface);border:1px solid var(--focus-line);font-size:14px;font-weight:600;color:var(--focus-text);transition:background .15s}
+.new-chat:hover{background:#efe8fb}
+.chat-history-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:2px;scrollbar-width:thin}
+.history-item{display:flex;align-items:center;border-radius:10px}
+.history-item:hover,.history-item.active{background:var(--focus-surface)}
+.history-item.active{box-shadow:inset 3px 0 0 var(--focus-accent)}
+.history-link{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:8px 10px;text-align:left}
+.history-link span{width:100%;font-size:13.5px;color:var(--focus-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-link small{font-size:11px;color:var(--focus-muted)}
+.history-delete{opacity:0;padding:8px;color:var(--focus-muted);border-radius:8px}
+.history-item:hover .history-delete,.history-delete:focus-visible{opacity:1}
+.history-delete:hover{color:#c0465a}
+.history-empty,.history-note{font-size:12px;color:var(--focus-muted);text-align:center;line-height:1.7;padding:14px 4px}
+.history-note{padding:0;font-size:11px}
+.history-backdrop,.history-toggle{display:none}
+.chat-main{display:flex;flex-direction:column;min-height:0;min-width:0}
+.chat-topbar{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--focus-line);min-height:58px}
+.chat-topbar strong{flex:1;font-size:15px;font-weight:600;color:var(--focus-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.chat-thread{max-width:760px;margin:0 auto;padding:28px 24px 12px;display:flex;flex-direction:column;gap:26px}
+.turn.user{display:flex;justify-content:flex-end}
+.user-bubble{max-width:82%;background:#efe8fb;color:#3d2f55;padding:11px 17px;border-radius:20px 20px 6px 20px;font-size:15px;line-height:1.75;white-space:pre-wrap;overflow-wrap:anywhere}
+.turn.assistant{display:grid;grid-template-columns:30px minmax(0,1fr);gap:14px;align-items:start}
+.turn-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;background:#fff6c9}
+.turn-body{font-size:15.5px;line-height:1.85;color:var(--focus-text);overflow-wrap:anywhere;padding-top:2px}
+.turn-body p{margin:0}
+.turn-body .md-gap{height:.6em}
+.turn-body .md-h{font-weight:700;margin-top:.4em}
+.turn-body .md-li{position:relative;padding-left:20px}
+.turn-body .md-li::before{content:'';position:absolute;left:6px;top:.8em;width:5px;height:5px;border-radius:50%;background:var(--focus-accent)}
+.turn-body code{font-family:ui-monospace,Consolas,monospace;font-size:.9em;background:var(--focus-raised);padding:1px 6px;border-radius:6px}
+.turn-body.is-error{color:#b04257}
+.turn-body .draft-event{margin-top:12px}
+.thinking{display:flex;gap:6px;padding-top:12px}
+.thinking span{width:8px;height:8px;border-radius:50%;background:#e9c84a;animation:dayzi-bounce 1s infinite ease-in-out}
+.thinking span:nth-child(2){animation-delay:.15s;background:#f2a7bf}
+.thinking span:nth-child(3){animation-delay:.3s;background:#9fd3b0}
+@keyframes dayzi-bounce{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-6px);opacity:1}}
+.chat-hero{max-width:680px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px 24px}
+.chat-hero img{width:140px;height:140px;border-radius:50%;object-fit:cover;box-shadow:0 12px 30px #e6c95533;animation:dayzi-float 4s ease-in-out infinite}
+@keyframes dayzi-float{50%{transform:translateY(-6px)}}
+.chat-hero h1{margin:18px 0 4px;font-size:28px;font-weight:650;color:var(--focus-text)}
+.chat-hero p{color:var(--focus-muted);font-size:16px}
+.chat-starters{margin-top:26px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%}
+.chat-starters button{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;padding:13px 16px;border:1px solid var(--focus-line);border-radius:14px;font-size:14px;color:var(--focus-text);background:var(--focus-surface);transition:border-color .15s,transform .15s}
+.chat-starters button:hover{border-color:var(--focus-accent);transform:translateY(-1px)}
+.chat-starters svg{color:var(--focus-muted);flex-shrink:0}
+.composer{width:calc(100% - 48px);max-width:760px;margin:8px auto 0;display:flex;align-items:flex-end;gap:10px;padding:10px 10px 10px 18px;border:1px solid var(--focus-line);border-radius:22px;background:var(--focus-surface);box-shadow:0 6px 24px #6d5a9014;transition:border-color .15s}
+.composer:focus-within{border-color:#c4b0e6}
+.composer textarea{flex:1;border:0;outline:0;resize:none;background:transparent;font:inherit;font-size:15px;line-height:1.6;color:var(--focus-text);max-height:200px;padding:6px 0}
+.composer textarea::placeholder{color:var(--focus-muted)}
+.composer button{flex-shrink:0;width:38px;height:38px;border-radius:12px;background:#8b6bc4;color:#fff;display:flex;align-items:center;justify-content:center}
+.composer button:disabled{background:#d9d1e8}
+.chat-disclaimer{text-align:center;font-size:11.5px;color:var(--focus-muted);padding:8px 16px 12px}
+[data-theme=dark] .user-bubble{background:#4c375f;color:#f4e8ff}
+[data-theme=dark] .new-chat:hover{background:#3a3148}
+[data-theme=dark] .composer{background:#19181f;box-shadow:none}
+[data-theme=dark] .composer button:disabled{background:#453e52}
+@media (max-width:860px){
+  .claude-chat{grid-template-columns:minmax(0,1fr);border-radius:16px}
+  .chat-history{position:absolute;inset:0 auto 0 0;width:min(290px,84%);z-index:5;transform:translateX(-102%);transition:transform .2s;box-shadow:8px 0 30px #0002}
+  .history-open .chat-history{transform:none}
+  .history-backdrop{display:block;position:absolute;inset:0;z-index:4;background:#0003;border:0}
+  .history-toggle{display:flex}
+  .history-delete{opacity:1}
+  .chat-thread{padding:20px 14px 8px}
+  .composer{width:calc(100% - 20px)}
+  .chat-starters{grid-template-columns:1fr}
+  .chat-hero h1{font-size:22px}
+}
+
+/* ===== โน้ตกระดาษ 5 แบบ ===== */
+.paper-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:30px 26px;padding:14px 4px 30px}
+.paper-note{position:relative;min-height:230px;padding:30px 22px 18px;text-align:left;display:flex;flex-direction:column;border:0;border-radius:3px;transform:rotate(var(--tilt,0deg));box-shadow:0 1px 2px #0000000d,0 10px 22px -8px #5b4a3a40;transition:transform .2s,box-shadow .2s;font-family:inherit}
+.paper-note:hover,.paper-note:focus-visible{transform:rotate(0) translateY(-4px) scale(1.02);box-shadow:0 2px 4px #0000000f,0 18px 30px -10px #5b4a3a55;z-index:1}
+.paper-note h3{font-size:17px;font-weight:700;margin:0 0 8px;color:#3b3226;line-height:1.4}
+.paper-note p{white-space:pre-wrap;overflow:hidden;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;font-size:14.5px;line-height:28px;color:#4d4436;margin:0}
+.paper-note small{margin-top:auto;padding-top:14px;font-size:11.5px;color:#8a7d68}
+.paper-deco{position:absolute;pointer-events:none}
+/* เหลือง: โพสต์อิทมีเทปใส */
+.paper-sunny{background:linear-gradient(180deg,#fff3a6,#ffeb85);border-bottom-right-radius:22px 6px}
+.paper-sunny .paper-deco{top:-11px;left:50%;width:92px;height:24px;margin-left:-46px;background:#ffffff8c;border:1px solid #ffffffb0;transform:rotate(-3deg);box-shadow:0 1px 2px #0000000f}
+/* ชมพู: มุมพับ */
+.paper-blossom{background:linear-gradient(160deg,#ffe0ea,#ffd0df);clip-path:polygon(0 0,100% 0,100% calc(100% - 30px),calc(100% - 30px) 100%,0 100%)}
+.paper-blossom .paper-deco{right:0;bottom:0;width:30px;height:30px;background:linear-gradient(135deg,#f3b1c6 50%,transparent 50%);box-shadow:-2px -2px 4px #0000000d}
+.paper-blossom h3::before{content:'🌸 '}
+/* มิ้นต์: หมุดปัก */
+.paper-mint{background:linear-gradient(180deg,#dcf5e6,#cdeedb)}
+.paper-mint .paper-deco{top:-8px;left:50%;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff9aa8,#e0566c 60%,#b8394f);box-shadow:0 3px 4px #0000003a}
+/* สมุดมีเส้น: เส้นบรรทัด + เส้นขอบแดง + รูเจาะ */
+.paper-notebook{background:#fffefa;background-image:linear-gradient(90deg,transparent 40px,#f2a2a2 40px,#f2a2a2 41.5px,transparent 41.5px),repeating-linear-gradient(180deg,transparent 0 27px,#cfe0f3 27px 28px);background-position:0 0,0 30px;padding-left:54px}
+.paper-notebook .paper-deco{left:12px;top:26px;width:12px;height:12px;border-radius:50%;background:#efeae0;box-shadow:inset 0 1px 2px #0002,0 70px 0 #efeae0,0 140px 0 #efeae0}
+/* คราฟต์: กระดาษน้ำตาลกับเทปลายจุด */
+.paper-kraft{background:#e3c9a3;background-image:radial-gradient(#c9a77a 0.8px,transparent 1px);background-size:7px 7px}
+.paper-kraft h3,.paper-kraft p{color:#4a3520}
+.paper-kraft small{color:#7a5d3c}
+.paper-kraft .paper-deco{top:-9px;left:14px;width:70px;height:22px;transform:rotate(-8deg);background:repeating-linear-gradient(45deg,#f6d0d9 0 6px,#fbe7ec 6px 12px);opacity:.92}
+/* ตัวเลือกกระดาษในหน้าต่างแก้ไข */
+.paper-picker{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:14px}
+.paper-picker button{display:flex;flex-direction:column;align-items:center;gap:7px;padding:8px 4px;border-radius:12px;border:2px solid transparent;font-size:11.5px;color:var(--focus-muted)}
+.paper-picker button.selected{border-color:var(--focus-accent);color:var(--focus-text);background:var(--focus-raised)}
+.paper-swatch{position:relative;display:block;width:46px;height:46px;border-radius:3px;box-shadow:0 4px 8px -3px #5b4a3a55;padding:0!important}
+.paper-swatch .paper-deco{transform:scale(.45);transform-origin:top center}
+.paper-swatch.paper-notebook{background-position:0 0,0 6px;background-size:auto,auto;background-image:linear-gradient(90deg,transparent 10px,#f2a2a2 10px,#f2a2a2 11px,transparent 11px),repeating-linear-gradient(180deg,transparent 0 7px,#cfe0f3 7px 8px)}
+.paper-swatch.paper-notebook .paper-deco{display:none}
+.paper-swatch.paper-blossom{clip-path:polygon(0 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%)}
+.paper-swatch.paper-blossom .paper-deco{width:12px;height:12px;transform:none}
+[data-theme=dark] .paper-note{box-shadow:0 10px 24px -8px #000a}
+@media (max-width:640px){.paper-board{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 14px}.paper-note{min-height:180px;padding:24px 14px 14px}.paper-notebook{padding-left:40px}.paper-notebook{background-image:linear-gradient(90deg,transparent 30px,#f2a2a2 30px,#f2a2a2 31.5px,transparent 31.5px),repeating-linear-gradient(180deg,transparent 0 27px,#cfe0f3 27px 28px)}.paper-notebook .paper-deco{left:8px}.paper-picker{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* ===== ปฏิทิน: แถวสูงคงที่ นัดเป็นแถบบรรทัดเดียว ไม่ทับกัน ===== */
+.page-calendar .calendar-card{overflow:auto}
+.page-calendar .month-grid{grid-template-rows:repeat(var(--rows),minmax(118px,1fr))}
+.page-calendar .week-view{grid-template-rows:minmax(420px,1fr)}
+.page-calendar .day-cell,.page-calendar .week-view .day-cell{position:relative;overflow:hidden;padding:6px 6px 4px;gap:3px}
+.page-calendar .day-number{margin-bottom:2px}
+.page-calendar .cell-events{overflow:hidden;gap:3px}
+.page-calendar .calendar-event{display:flex!important;flex-direction:row!important;align-items:center!important;gap:5px!important;min-height:0!important;height:22px;padding:0 6px!important;border-left:0!important;border-radius:6px!important;background:var(--event-bg)!important;width:100%;flex-shrink:0}
+.page-calendar .week-view .calendar-event{height:auto;min-height:40px!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center;padding:5px 8px!important;gap:1px!important}
+.event-dot{width:7px;height:7px;border-radius:50%;background:var(--event-color);flex-shrink:0}
+.week-view .event-dot{display:none}
+.page-calendar .calendar-event span{font-size:10.5px!important;font-weight:600;color:#5d5170!important;flex-shrink:0;opacity:1}
+.page-calendar .calendar-event b{font-size:11.5px!important;font-weight:500;line-height:22px!important;color:#3b3149;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.page-calendar .week-view .calendar-event b{line-height:1.4!important;white-space:normal}
+.page-calendar .more-events{position:static!important;background:transparent!important;font-size:11px!important;font-weight:600;color:var(--focus-accent)!important;padding:1px 4px!important;text-align:left;border-radius:5px}
+.page-calendar .more-events:hover{background:var(--focus-raised)!important}
+.page-calendar .calendar-task-count{font-size:11px}
+.compact .calendar-event{flex-direction:row!important;align-items:center;gap:4px;min-height:0!important;height:20px;padding:0 5px!important;border-left:0!important;border-radius:5px}
+.compact .calendar-event b{font-size:10.5px!important;line-height:20px!important}
+.compact .calendar-event span{font-size:9.5px!important}
+[data-theme=dark] .page-calendar .calendar-event,[data-theme=dark] .compact .calendar-event{background:#3a2f49!important}
+[data-theme=dark] .page-calendar .calendar-event b{color:#f1e6ff}
+[data-theme=dark] .page-calendar .calendar-event span{color:#cdb9e2!important}
+@media (max-width:760px){.page-calendar .month-grid{grid-template-rows:repeat(var(--rows),minmax(86px,1fr))}.compact .event-dot{display:none}}
+
+/* ปุ่มเข้าสู่ระบบด้วย LINE บนแถบบน */
+.login-top{min-height:38px;padding:8px 14px;font-size:13px;white-space:nowrap;text-decoration:none}
+@media (max-width:760px){.login-top{padding:8px 11px}.login-top span{display:none}}

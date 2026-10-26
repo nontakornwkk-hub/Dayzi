@@ -1,0 +1,26 @@
+{
+  "name": "dayzi-personal-assistant",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "node scripts/bake-gemini-keys.mjs && vite build",
+    "test": "node --test --test-concurrency=1 tests/*.test.mjs",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@google/genai": "^2.31.0",
+    "google-auth-library": "^10.0.0",
+    "lucide-react": "^0.468.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tesseract.js": "^7.0.0",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.2.6",
+    "happy-dom": "^21.0.4",
+    "vite": "^7.0.0"
+  }
+}

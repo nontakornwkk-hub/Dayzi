@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>นโยบายความเป็นส่วนตัว – Dayzi</title>
+<meta name="robots" content="index,follow">
+<style>
+:root{--ink:#2f2a3a;--sub:#7b7488;--accent:#8f6fd0;--soft:#efe8fb;--bg:#faf8fd;--card:#fff}
+@media(prefers-color-scheme:dark){:root{--ink:#efeaf7;--sub:#a59db3;--accent:#b9a0ee;--soft:#2f2840;--bg:#17131f;--card:#1f1b27}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,'Noto Sans Thai',sans-serif}
+main{max-width:760px;margin:0 auto;padding:32px 16px 64px}
+header a{color:var(--accent);text-decoration:none;font-weight:700;font-size:20px}
+article{background:var(--card);border-radius:22px;padding:28px 24px;margin-top:18px;box-shadow:0 8px 24px rgba(47,42,58,.06)}
+h1{margin:0 0 4px;font-size:26px}h2{margin:28px 0 6px;font-size:18px;color:var(--accent)}p,li{margin:6px 0}ul{padding-left:22px}
+.meta{color:var(--sub);font-size:14px}nav{margin-top:20px;font-size:14px}nav a{color:var(--accent);margin-right:14px}
+</style>
+</head>
+<body>
+<main>
+<header><a href="/">dayzi.</a></header>
+<article>
+<h1>นโยบายความเป็นส่วนตัว</h1>
+<p class="meta">Dayzi · อัปเดตล่าสุด 27 ตุลาคม 2569 (2026)</p>
+<p>Dayzi ("เรา") เป็นผู้ช่วยส่วนตัวที่ช่วยจดนัดหมาย งาน โน้ต รายรับรายจ่าย และไฟล์ ผ่านเว็บ Dayzi และบัญชี LINE Official ของ Dayzi นโยบายนี้อธิบายว่าเราเก็บ ใช้ และปกป้องข้อมูลของคุณอย่างไร</p>
+
+<h2>1. ข้อมูลที่เราเข้าถึง</h2>
+<ul>
+<li><strong>บัญชี LINE:</strong> รหัสผู้ใช้ LINE และชื่อที่แสดง เพื่อระบุว่าคุณเป็นใครและตอบข้อความกลับถึงคุณ</li>
+<li><strong>บัญชี Google (เมื่อคุณกดเชื่อม):</strong> อีเมลของบัญชีที่คุณเลือก และสิทธิ์เข้าถึงเฉพาะไฟล์ที่ Dayzi สร้างเองใน Google Drive ของคุณ (ขอบเขต <code>drive.file</code>) Dayzi มองไม่เห็นไฟล์อื่นใน Drive ของคุณ</li>
+<li><strong>เนื้อหาที่คุณสั่งหรือส่งให้:</strong> ข้อความแชต นัดหมาย งาน โน้ต รายการเงิน ไฟล์ และรูปสลิปหรือใบเสร็จที่คุณเลือกส่ง</li>
+</ul>
+
+<h2>2. เราใช้ข้อมูลเพื่ออะไร</h2>
+<ul>
+<li>จดและแสดงนัดหมาย งาน โน้ต รายรับรายจ่าย และไฟล์ของคุณ</li>
+<li>ส่งการแจ้งเตือนและตอบข้อความผ่าน LINE</li>
+<li>ให้เดซี่ตอบแชต สรุป และอ่านสลิป โดยส่งข้อความหรือรูปที่เกี่ยวข้องไปให้ Gemini API ของ Google ประมวลผลเท่าที่จำเป็นต่อคำขอนั้น ๆ</li>
+</ul>
+<p>เราไม่ขายข้อมูลของคุณ ไม่ใช้เพื่อโฆษณา และไม่ส่งให้บุคคลที่สามนอกเหนือจากผู้ให้บริการที่จำเป็นต่อการทำงาน (LINE, Google, Netlify)</p>
+
+<h2>3. ข้อมูลของคุณอยู่ที่ไหน</h2>
+<ul>
+<li>เมื่อเชื่อม Google แล้ว นัดหมาย งาน โน้ต รายการเงิน และรายการไฟล์จะอยู่ใน Google Sheets ชื่อ "Dayzi" และโฟลเดอร์ใน Google Drive <strong>ของคุณเอง</strong> คุณเปิดดู แก้ไข หรือลบได้โดยตรง</li>
+<li>เราเก็บข้อมูลบัญชีเท่าที่จำเป็นในทะเบียนของระบบ ได้แก่ รหัสผู้ใช้ LINE ชื่อ อีเมล รหัสอ้างอิงของ Sheet และโฟลเดอร์ ค่าการตั้งค่า และโทเค็นการเข้าถึง Google ที่ <strong>เข้ารหัส</strong> ไว้</li>
+<li>ข้อความแชตกับเดซี่ที่ใช้ต่อเนื่องอาจถูกเก็บเป็นประวัติแบบเข้ารหัส และข้อมูลบางส่วนบนเว็บเก็บในเบราว์เซอร์ของคุณ (เช่น ธีม ตำแหน่งเดซี่ และไฟล์ที่บันทึกไว้ในเครื่อง)</li>
+</ul>
+
+<h2>4. ข้อความถึง Google API Services User Data Policy</h2>
+<p>การใช้และการโอนข้อมูลที่ได้รับจาก Google APIs ไปยังแอปอื่นของ Dayzi จะเป็นไปตาม <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a> รวมถึงข้อกำหนดการใช้งานแบบจำกัด (Limited Use) เราใช้ข้อมูลจาก Google เพื่อให้ฟีเจอร์ที่คุณเห็นในแอปทำงานเท่านั้น</p>
+
+<h2>5. การปกป้องข้อมูล</h2>
+<ul>
+<li>การเชื่อมต่อทั้งหมดใช้ HTTPS</li>
+<li>โทเค็น Google ถูกเข้ารหัสก่อนเก็บ และใช้เฉพาะเพื่อเข้าถึง Sheet และโฟลเดอร์ของบัญชีนั้น</li>
+<li>เราไม่เห็นรหัสผ่านบัญชี Google หรือ LINE ของคุณ</li>
+</ul>
+
+<h2>6. สิทธิ์ของคุณ</h2>
+<ul>
+<li><strong>ถอนสิทธิ์ Google:</strong> ไปที่ <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a> เลือก Dayzi แล้วกดลบการเข้าถึงได้ทุกเมื่อ</li>
+<li><strong>ลบข้อมูล:</strong> ลบไฟล์ Sheet และโฟลเดอร์ "Dayzi" ใน Drive ของคุณได้เอง หากต้องการให้เราลบข้อมูลบัญชีในทะเบียนของระบบ ส่งอีเมลหาเราตามช่องทางด้านล่าง</li>
+<li><strong>เลิกใช้ LINE:</strong> บล็อกหรือลบเพื่อนบัญชี Dayzi ใน LINE ได้ทุกเมื่อ</li>
+</ul>
+
+<h2>7. เด็กและเยาวชน</h2>
+<p>บริการนี้ไม่ได้ออกแบบสำหรับผู้ที่อายุต่ำกว่า 13 ปี</p>
+
+<h2>8. การเปลี่ยนแปลงนโยบาย</h2>
+<p>หากมีการเปลี่ยนแปลงสำคัญ เราจะปรับวันที่ด้านบนและแจ้งในแอปเมื่อเหมาะสม</p>
+
+<h2>9. ติดต่อเรา</h2>
+<p>คำถามเรื่องข้อมูลส่วนบุคคล ติดต่อ <a href="mailto:nontakorn.wnk@gmail.com">nontakorn.wnk@gmail.com</a></p>
+<nav><a href="/">กลับหน้าแรก</a><a href="/terms.html">เงื่อนไขการใช้งาน</a></nav>
+</article>
+</main>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# Dayzi local-first commands and finance
+
+User asks ordinary app actions to run without AI, with reasoning/planning only delegated to Gemini; add income/expenses, slip reading and useful spending breakdown. Implement against existing React/Sheets/LINE app; preserve current user changes and unapproved Rich Menu publication.
+
+Decisions: integer satang ledger; income/expense/own-account-transfer types; editable draft from local Thai+English OCR, no automatic direction inference, no original receipt sent to AI. Monthly totals/category breakdown and deterministic text commands do not call Gemini. AI analysis explicitly requested by user can receive summary totals without bank account numbers or receipt text. Additive transactions Sheet; legacy workspaces read as empty until coordinator writes the new tab. User must deploy the updated coordinator for cloud finance. Existing storage error handling remains in charge of saving. Work locally and verify before any hosting update.
+
+Steps: finance model/parser and tests; command routing before Gemini in web+LINE; finance UI with create/edit/delete/month/category/budget, receipt draft review and CSV; host OCR runtime/models locally; test with synthetic receipt (no personal financial data); schema/validation/migration tests; focused review and final suite/build. Cost note distinguishes AI-token fees from hosting/bandwidth/storage and LINE message quotas.

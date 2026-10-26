@@ -1,0 +1,18 @@
+# Vercel's free plan only allows one cron run per day, so GitHub calls the reminder endpoint every 5 minutes.
+# Repository secrets needed: SITE_URL (https://your-site.vercel.app) and REMINDER_WORKER_SECRET.
+name: reminders
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call reminder endpoint
+        env:
+          SITE_URL: ${{ secrets.SITE_URL }}
+          SECRET: ${{ secrets.REMINDER_WORKER_SECRET }}
+        run: |
+          test -n "$SITE_URL" -a -n "$SECRET" || { echo "Reminder secrets are not set"; exit 0; }
+          curl -fsS -X POST "$SITE_URL/api/cron/reminders" -H "Authorization: Bearer $SECRET"

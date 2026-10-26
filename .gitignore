@@ -1,0 +1,23 @@
+node_modules/
+.cache/
+.local/
+.qa/
+dayzi-source.zip
+dist/
+.netlify/
+.env
+.env.*
+!.env.example
+*.log
+test-results/
+server/gemini-keys.generated.json
+
+# secrets and local-only files: never commit these
+*.env
+netlify-import.env
+dayzi-[0-9]*.json
+*.zip
+.claude/
+.vercel/
+.netlify/
+server/baked-env.generated.json
