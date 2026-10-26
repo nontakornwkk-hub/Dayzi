@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {createHmac} from 'node:crypto';
 const bot=await import('../server/line-bot.mjs').catch(()=>({}));
-process.env.SESSION_SECRET??='test-session-secret';
+process.env.SESSION_SECRET??='test-session-secret';process.env.GOOGLE_CLIENT_ID??='test-client';process.env.GOOGLE_CLIENT_SECRET??='test-secret';
 const lineId='U'+'a'.repeat(32),uid='line:'+lineId;
 test('redelivered LINE expense message does not create a second ledger entry',async()=>{
  const {decodeData}=await import('../server/google.mjs');let saves=0;
@@ -80,4 +80,9 @@ test('confirm postbacks need a connected account but cancel does not',async()=>{
  const post=data=>{let reply;return bot.handleLineWebhook(request([{type:'postback',source:{type:'user',userId:lineId},replyToken:'r',postback:{data}}]),{origin:'https://dayzi.test',channelSecret:'secret',channelToken:'token',registry:async action=>action==='findLine'?freshAccount:{ok:true},accountData:async()=>{throw new Error('must not read storage');},fetch:async(url,options)=>{if(String(url).endsWith('/reply'))reply=JSON.parse(options.body);return new Response('{}');}}).then(()=>reply.messages[0]);};
  assert.equal((await post(JSON.stringify({a:'ok',n:'add_task',g:{title:'x',date:'2026-10-28'}}))).type,'flex');
  assert.match((await post(JSON.stringify({a:'cancel'}))).text,/ยกเลิกแล้ว/);
+});
+test('without Google sign-in configured the connect card opens web settings for the two-link setup',async()=>{
+ const saved=[process.env.GOOGLE_CLIENT_ID,process.env.GOOGLE_CLIENT_SECRET];delete process.env.GOOGLE_CLIENT_ID;delete process.env.GOOGLE_CLIENT_SECRET;
+ try{const {reply}=await send('เพิ่มงาน ซื้อนม พรุ่งนี้');const card=JSON.stringify(reply);assert.equal(reply.type,'flex');assert.ok(card.includes('https://dayzi.test/?page=settings'));assert.ok(!card.includes('google/start'));}
+ finally{process.env.GOOGLE_CLIENT_ID=saved[0];process.env.GOOGLE_CLIENT_SECRET=saved[1];}
 });

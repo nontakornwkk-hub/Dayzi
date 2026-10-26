@@ -12,7 +12,7 @@ import {createLinkToken} from './google-link.mjs';
 
 // Thrown when a request needs the user's own Google storage and they have not connected it yet.
 class NeedConnect extends Error{}
-function connectReply(origin,uid,options){try{return connectMessage(origin,createLinkToken(uid,env('SESSION_SECRET')),options);}catch{return `ต้องเชื่อม Google ของคุณก่อนนะคะ เปิดเว็บเพื่อเชื่อม: ${origin}`;}}
+function connectReply(origin,uid,options={}){const viaWeb=!(env('GOOGLE_CLIENT_ID')&&env('GOOGLE_CLIENT_SECRET'));if(viaWeb)return connectMessage(origin,'',{...options,viaWeb});try{return connectMessage(origin,createLinkToken(uid,env('SESSION_SECRET')),options);}catch{return `ต้องเชื่อม Google ของคุณก่อนนะคะ เปิดเว็บเพื่อเชื่อม: ${origin}`;}}
 
 export async function handleLineWebhook(request,options={}) {
   const secret=options.channelSecret??env('LINE_CHANNEL_SECRET');

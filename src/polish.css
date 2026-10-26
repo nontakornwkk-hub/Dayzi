@@ -380,3 +380,13 @@ input[type=month],input[type=date],input[type=time]{border:1px solid var(--hair)
 .lg-error{margin:-12px 0 16px!important;color:var(--late)!important;font-size:13.5px}
 .lg-wait{display:flex;gap:8px;align-items:center;justify-content:center;min-height:52px;margin:0!important;color:var(--sub)}
 @media (max-width:480px){.lg-card{padding:26px 20px 22px!important;border-radius:24px}.login-gate{align-items:start!important;padding-top:10vh!important}}
+
+/* Task priority, time and carried-over group */
+.priority-pick{display:inline-flex;gap:2px;padding:2px;border-radius:999px;background:var(--accent-soft)}
+.priority-pick button{border:0;background:transparent;color:var(--sub);font:inherit;font-size:12px;padding:4px 10px;border-radius:999px;cursor:pointer}
+.priority-pick button.active{background:var(--card);color:var(--accent);font-weight:600;box-shadow:var(--shadow)}
+.priority-pick button.pri-high.active{color:var(--late)}
+.task-time-input{border:1px solid var(--hair);border-radius:10px;padding:5px 8px;font:inherit;font-size:12px;background:var(--card);color:var(--ink)}
+.pri-flag{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--late);margin-right:7px;vertical-align:middle}
+.task-day.carry .task-day-head{background:var(--late-soft)}
+.task-day.carry .task-day-date strong,.task-day.carry .task-day-date span{color:var(--late)}

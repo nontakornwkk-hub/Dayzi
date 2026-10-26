@@ -33,8 +33,12 @@ export function todayMessage(data,summary,origin,date=localDate()){
  const tasks=(data.tasks??[]).filter(t=>!t.done&&t.date===date);
  return message(summary,[bubble({origin,label:'เริ่มวันไปด้วยกัน',title:'วันนี้ของคุณ',date:thaiDate(date),lines:[`นัดหมาย ${events.length} · งานวันนี้ ${tasks.length}`,...(events.length?events.slice(0,7).map(e=>`${e.allDay?'ทั้งวัน':`${e.time} น.`} · ${e.title}${e.status==='done'?' ✓':''}`):['ยังไม่มีนัดหมายค่ะ']),...tasks.slice(0,7).map(t=>`☐ ${t.title}`),...(events.length>7||tasks.length>7?['ดูรายการที่เหลือในแอปได้เลยค่ะ']:[]),...(!events.length&&!tasks.length?['วันนี้ยังว่างอยู่เลยค่ะ 🌼']:[])],buttons:[open(origin,'calendar','เปิดปฏิทิน'),open(origin,'tasks','ดูงานทั้งหมด')]})]);
 }
-export function connectMessage(origin,token,{welcome=false}={}){
- return message('เชื่อม Google ของคุณก่อนเริ่มใช้งาน',[bubble({origin,label:welcome?'ยินดีต้อนรับค่ะ':'ต้องเชื่อมก่อนนะคะ',title:'เชื่อม Google ของคุณ',lines:['เดซี่จะเก็บนัด งาน และไฟล์ไว้ใน Google Drive และ Sheets ของคุณเอง ไม่ปนกับของคนอื่น','กดปุ่มด้านล่าง เลือกบัญชี Google แล้วกดอนุญาตครั้งเดียว','ระหว่างนี้ยังคุยทั่วไปกับเดซี่ได้ตามปกติ 🌼'],buttons:[{type:'button',style:'primary',height:'sm',color:colors.accent,action:{type:'uri',label:'เชื่อม Google ของฉัน',uri:`${origin}/api/google/start?link=${encodeURIComponent(token)}`}}]})]);
+// Asks a new friend to connect their own storage. With Google sign-in configured it links straight to Google;
+// otherwise it opens the web settings, where they log in with LINE and paste their Sheet and Drive links.
+export function connectMessage(origin,token,{welcome=false,viaWeb=false}={}){
+ const lines=viaWeb?['เดซี่จะเก็บนัด งาน และไฟล์ไว้ใน Google Sheet และ Drive ของคุณเอง ไม่ปนกับของคนอื่น','กดปุ่มด้านล่าง เข้าสู่ระบบด้วย LINE แล้ววางลิงก์ Sheet และโฟลเดอร์ Drive 2 อันก็เสร็จ','ระหว่างนี้ยังคุยทั่วไปกับเดซี่ได้ตามปกติ 🌼']:['เดซี่จะเก็บนัด งาน และไฟล์ไว้ใน Google Drive และ Sheets ของคุณเอง ไม่ปนกับของคนอื่น','กดปุ่มด้านล่าง เลือกบัญชี Google แล้วกดอนุญาตครั้งเดียว','ระหว่างนี้ยังคุยทั่วไปกับเดซี่ได้ตามปกติ 🌼'];
+ const button=viaWeb?{type:'uri',label:'เชื่อมพื้นที่ของฉัน',uri:`${origin}/?page=settings`}:{type:'uri',label:'เชื่อม Google ของฉัน',uri:`${origin}/api/google/start?link=${encodeURIComponent(token)}`};
+ return message('เชื่อมพื้นที่เก็บข้อมูลของคุณก่อนเริ่มใช้งาน',[bubble({origin,label:welcome?'ยินดีต้อนรับค่ะ':'ต้องเชื่อมก่อนนะคะ',title:'เชื่อมพื้นที่ของคุณ',lines,buttons:[{type:'button',style:'primary',height:'sm',color:colors.accent,action:button}]})]);
 }
 export function noteMessage(note,summary,origin){
  return message(summary,[bubble({origin,label:'โน้ตของคุณ',title:note.title||'โน้ต',lines:[String(note.content).slice(0,300)],buttons:[open(origin,'notes','เปิดโน้ต')]})]);
