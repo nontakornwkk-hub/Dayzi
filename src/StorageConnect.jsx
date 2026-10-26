@@ -8,7 +8,7 @@ const safe=(url,host)=>{try{const u=new URL(url);return u.protocol==='https:'&&u
 // One place to connect storage: log in with LINE first, then either one-tap Google or paste exactly two links.
 export default function StorageConnect({user,config,connection,tell}){
  const connected=connection?.status==='ready',googleLinked=connected&&connection.auth==='oauth';
- const [tab,setTab]=useState(config.googleLink?'google':'links'),[sheetUrl,setSheetUrl]=useState(''),[folderUrl,setFolderUrl]=useState(''),[busy,setBusy]=useState(false),[copied,setCopied]=useState(false);
+ const [tab,setTab]=useState('links'),[sheetUrl,setSheetUrl]=useState(''),[folderUrl,setFolderUrl]=useState(''),[busy,setBusy]=useState(false),[copied,setCopied]=useState(false);
  const addFriend=()=>{if(config.lineBotId)window.open(`https://line.me/R/ti/p/${encodeURIComponent(config.lineBotId)}`,'_blank','noopener,noreferrer');};
  const copy=()=>{navigator.clipboard?.writeText(config.serviceEmail).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);}).catch(()=>tell('คัดลอกไม่สำเร็จ กรุณาคัดลอกเอง','error'));};
  async function connectLinks(){
@@ -31,7 +31,7 @@ export default function StorageConnect({user,config,connection,tell}){
   <header className="sc-head"><span className="sc-icon">{connected?<ShieldCheck size={22}/>:<Cloud size={22}/>}</span><div><h3>พื้นที่เก็บข้อมูลของคุณ</h3><p>ข้อมูลทั้งหมดอยู่ใน Sheet และ Drive ของคุณเอง ไม่ปนกับของคนอื่น</p></div><span className={`connection-label ${status[1]}`}>{status[0]}</span></header>
 
   {!user&&<div className="sc-body">
-   <ol className="sc-steps"><li className="on"><b>1</b>เข้าสู่ระบบด้วย LINE</li><li><b>2</b>เชื่อม Google หรือวางลิงก์ 2 อัน</li><li><b>3</b>เสร็จ ใช้ได้ทั้งเว็บและ LINE</li></ol>
+   <ol className="sc-steps"><li className="on"><b>1</b>เข้าสู่ระบบด้วย LINE</li><li><b>2</b>วางลิงก์ Sheet และ Drive</li><li><b>3</b>เสร็จ ใช้ได้ทั้งเว็บและ LINE</li></ol>
    <div className="sc-actions">
     {config.lineLogin?<a className="line-button sc-big" href="/api/line/start"><MessageCircle size={19}/>เข้าสู่ระบบด้วย LINE</a>:<div className="setup-notice"><AlertCircle size={17}/><span>ระบบเข้าสู่ระบบด้วย LINE ยังตั้งค่าไม่เสร็จ ผู้ดูแลกำลังดำเนินการ</span></div>}
     {config.lineBotId&&<button className="secondary-button" onClick={addFriend}><Plus size={16}/>เพิ่มเพื่อน Dayzi ใน LINE</button>}
@@ -49,7 +49,7 @@ export default function StorageConnect({user,config,connection,tell}){
   </div>}
 
   {user&&!connected&&<div className="sc-body">
-   {config.googleLink&&<div className="sc-tabs" role="tablist"><button role="tab" aria-selected={tab==='google'} className={tab==='google'?'active':''} onClick={()=>setTab('google')}>เชื่อม Google (ง่ายสุด)</button><button role="tab" aria-selected={tab==='links'} className={tab==='links'?'active':''} onClick={()=>setTab('links')}>วางลิงก์ 2 อัน</button></div>}
+   {config.googleLink&&<div className="sc-tabs" role="tablist"><button role="tab" aria-selected={tab==='links'} className={tab==='links'?'active':''} onClick={()=>setTab('links')}>วางลิงก์ 2 อัน</button><button role="tab" aria-selected={tab==='google'} className={tab==='google'?'active':''} onClick={()=>setTab('google')}>หรือเชื่อม Google</button></div>}
    {tab==='google'&&config.googleLink?<div className="sc-pane">
     <p>กดครั้งเดียว เลือกบัญชี Google แล้วกดอนุญาต เดซี่จะสร้าง Sheet และโฟลเดอร์ให้ใน Drive ของคุณเอง</p>
     <a className="primary-button sc-big" href="/api/google/start?link=1"><Cloud size={19}/>เชื่อม Google ของฉัน</a>
