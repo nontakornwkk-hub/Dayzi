@@ -158,7 +158,7 @@ input[type=month],input[type=date],input[type=time]{border:1px solid var(--hair)
 @media (max-width:640px){.task-days{grid-template-columns:1fr}}
 
 /* ---- To-do page: single column, quiet toolbar, quick delete ---- */
-.tasks-page{max-width:880px;margin:0 auto;width:100%}
+.tasks-page{max-width:1480px;margin:0 auto;width:100%}
 .tasks-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
 .tasks-head h1{font-size:22px;margin:0}
 .tasks-head span{color:var(--sub);font-size:13px}
@@ -329,20 +329,14 @@ input[type=month],input[type=date],input[type=time]{border:1px solid var(--hair)
 .sv-foot{text-align:center;font-size:12px;color:var(--sub)}.sv-foot a{color:var(--sub)}
 .chat-line-link{display:inline-flex;gap:6px;align-items:center;margin:12px auto 0;color:#06a64b;font-size:13.5px;text-decoration:none;font-weight:600}
 
-/* ---- Phone bottom navigation ---- */
-.bottom-nav{display:none}
+/* ---- Phone layout (no bottom bar; the top menu button opens navigation) ---- */
 @media (max-width:760px){
- .bottom-nav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:45;background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--hair);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
- .bottom-nav button{position:relative;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;color:var(--sub);font:inherit;font-size:11px;cursor:pointer;border-radius:14px}
- .bottom-nav button.active{color:var(--accent);font-weight:700}
- .bottom-nav button.active svg{background:var(--accent-soft);border-radius:999px;padding:3px 12px;box-sizing:content-box}
- .bottom-nav i{position:absolute;top:2px;left:calc(50% + 8px);font-style:normal;background:var(--late);color:#fff;border-radius:999px;font-size:10px;padding:0 5px;line-height:16px;min-width:16px}
- .main-content{padding-bottom:calc(92px + env(safe-area-inset-bottom))!important}
- .mascot{bottom:calc(84px + env(safe-area-inset-bottom))!important}
+ .main-content{padding-bottom:calc(24px + env(safe-area-inset-bottom))!important}
+ .mascot{bottom:calc(16px + env(safe-area-inset-bottom))!important}
  .mascot-body img{width:88px!important;height:88px!important}
  .mascot-panel{width:min(300px,calc(100vw - 24px))}
- .toast{bottom:calc(84px + env(safe-area-inset-bottom))!important}
- .undo-bar{bottom:calc(84px + env(safe-area-inset-bottom))}
+ .toast{bottom:calc(16px + env(safe-area-inset-bottom))!important}
+ .undo-bar{bottom:calc(16px + env(safe-area-inset-bottom))}
  .topbar .search-box{display:none}
  .tasks-filters{flex-direction:column;align-items:stretch}
  .tasks-filters .task-periods{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
@@ -390,3 +384,39 @@ input[type=month],input[type=date],input[type=time]{border:1px solid var(--hair)
 .pri-flag{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--late);margin-right:7px;vertical-align:middle}
 .task-day.carry .task-day-head{background:var(--late-soft)}
 .task-day.carry .task-day-date strong,.task-day.carry .task-day-date span{color:var(--late)}
+
+/* Task board: date columns */
+.tasks-page,.tasks-primary{min-height:0;flex:1}
+.layout-toggle{display:inline-flex;background:var(--accent-soft);border-radius:999px;padding:2px}
+.layout-toggle button{border:0;background:transparent;color:var(--sub);font:inherit;font-size:12px;padding:5px 11px;border-radius:999px;cursor:pointer;display:inline-flex;gap:5px;align-items:center}
+.layout-toggle button.active{background:var(--card);color:var(--accent);font-weight:600;box-shadow:var(--shadow)}
+.tasks-filters.is-board .task-periods,.tasks-filters.is-board .task-anchor{display:none}
+.tasks-filters.is-board{justify-content:flex-end}
+.task-board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:start;flex:1;min-height:0;overflow:auto;padding-bottom:12px}
+.board-col{background:var(--accent-soft);border-radius:18px;padding:10px;min-height:220px}
+.board-col.late{background:var(--late-soft)}
+.board-col>header{display:flex;align-items:baseline;gap:8px;padding:4px 6px 10px;color:var(--accent)}
+.board-col.late>header{color:var(--late)}
+.board-col>header strong{font-size:14px}
+.board-col>header span{font-size:12px;color:var(--sub)}
+.board-col>header em{margin-left:auto;font-style:normal;font-size:12px;color:var(--sub)}
+.board-move-all{width:100%;border:0;background:var(--card);color:var(--late);font:inherit;font-size:12px;border-radius:10px;padding:6px;margin-bottom:8px;cursor:pointer}
+.board-list{display:flex;flex-direction:column;gap:8px}
+.board-card{display:flex;align-items:flex-start;gap:8px;background:var(--card);border:1px solid var(--hair);border-left:4px solid var(--accent);border-radius:12px;padding:10px;cursor:grab}
+.board-card.pri-high{border-left-color:var(--late)}
+.board-card.pri-low{border-left-color:var(--hair)}
+.board-card.done{background:var(--done-soft);border-left-color:var(--done)}
+.board-card.done .board-title{text-decoration:line-through;color:var(--done)}
+.board-check,.board-body{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer;text-align:left}
+.board-check{color:var(--done);display:grid;place-items:center;flex:none;margin-top:1px}
+.board-ring{width:18px;height:18px;border-radius:50%;border:2px solid var(--accent);display:block}
+.board-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.board-title{font-size:14px;font-weight:500;color:var(--ink);overflow-wrap:anywhere}
+.board-body small{font-size:12px;color:var(--sub);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.board-time{font-style:normal;background:var(--accent-soft);color:var(--accent);padding:1px 8px;border-radius:999px}
+.board-empty{margin:6px;font-size:12px;color:var(--sub);text-align:center;border:1.5px dashed var(--hair);border-radius:12px;padding:14px 6px}
+@media(max-width:1100px){.task-board{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.task-board{grid-template-columns:minmax(0,1fr)}.tasks-filters.is-board{align-items:stretch}.board-card{cursor:default}}
+
+.boot-splash{min-height:100dvh;background:var(--bg,#faf8fd)}
+.lg-line[aria-busy=true]{pointer-events:none;opacity:.9}
