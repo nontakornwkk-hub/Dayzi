@@ -1,2 +1,3 @@
 .avatar>.profile-photo,.sv-avatar>.profile-photo{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.avatar.small-avatar{padding:0;overflow:hidden;flex-shrink:0;aspect-ratio:1}
 .cloud-banner{flex-wrap:wrap}.cloud-banner.error>a{flex-shrink:0}

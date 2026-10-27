@@ -43,34 +43,49 @@ export default async function handler(req){const url=new URL(req.url),origin=url
  if(path==='line/handoff'){let id;try{id=verifySession(cookie(req,'dayzi_handoff'),env('SESSION_SECRET')).sub;if(!HANDOFF_ID.test(id))throw new Error('bad');}catch{return json({error:'คำขอเข้าสู่ระบบหมดอายุ กรุณาเริ่มใหม่'},410);}const pending=await registry('get','handoff:'+id),uid=pending?.linkCode?.expires>Date.now()?pending.linkCode.code:null;if(!LINE_UID.test(uid??''))return json({pending:true});await registry('linkCode','handoff:'+id,{code:'used'});const account=await registry('lineOnboard',uid,{lineId:uid.slice(5)});const res=json({ok:true});res.headers.append('Set-Cookie',sessionCookie({sub:uid,name:account?.name??'คุณ',provider:'line'}));res.headers.append('Set-Cookie',setCookie('dayzi_handoff','',0));return res;}
  if(path==='google/start'){if(!configured())return json({error:'เจ้าของระบบต้องตั้งค่า Google OAuth และทะเบียนบัญชีก่อน'},503);const state=randomBytes(24).toString('hex'),verifier=randomBytes(48).toString('base64url'),challenge=createHash('sha256').update(verifier).digest('base64url');let link=null;const linkParam=url.searchParams.get('link');if(linkParam){try{link=linkParam==='1'?(()=>{const u=actor(req);if(!LINE_UID.test(u.sub))throw new Error('not line');return u.sub;})():readLinkToken(linkParam,env('SESSION_SECRET'));}catch{return redirect('/?error=google');}}const stateCookie=signSession({sub:state,verifier,...(link?{link,linkSession:linkParam==='1'}:{})},env('SESSION_SECRET'));const authUrl=oauth(origin).generateAuthUrl({access_type:'offline',prompt:'consent select_account',scope:link?LINK_SCOPES:['openid','email','profile','https://www.googleapis.com/auth/drive.file'],state,code_challenge:challenge,code_challenge_method:'S256'});return redirect(authUrl,[setCookie('dayzi_oauth',stateCookie,600)]);}
  if(path==='google/callback'){
+  let stage='state';
   try{
    const state=verifySession(cookie(req,'dayzi_oauth'),env('SESSION_SECRET'));
    if(state.sub!==url.searchParams.get('state')||Date.now()/1000-state.iat>600)throw new Error('Invalid OAuth state');
    let linkedBrowser=null;
    if(state.link){try{linkedBrowser=actor(req);}catch{}if(state.linkSession&&linkedBrowser?.sub!==state.link)throw new Error('LINE session changed during Google connection');}
+   stage='token_exchange';
    const client=oauth(origin),{tokens}=await client.getToken({code:url.searchParams.get('code'),codeVerifier:state.verifier});
+   stage='identity';
    const ticket=await client.verifyIdToken({idToken:tokens.id_token,audience:env('GOOGLE_CLIENT_ID')}),p=ticket.getPayload();
    if(!p.sub||!p.email_verified)throw new Error('Unverified identity');
    const picture=safeProfilePicture(p.picture);
    if(state.link){
     const uid=state.link;if(!LINE_UID.test(uid))throw new Error('Cannot link');
+    stage='registry_read';
     const existing=await registry('get',uid);
     const reuse=existing?.connection?.auth==='oauth'&&existing?.connection?.status==='ready';
     if(reuse&&existing.email?.toLowerCase()!==p.email?.toLowerCase())return redirect('/?error=google_account',[setCookie('dayzi_oauth','',0)]);
+    stage='token_storage';
     const encryptedToken=tokens.refresh_token?encryptSecret(tokens.refresh_token,uid,env('TOKEN_ENCRYPTION_KEY')):reuse?existing.encryptedToken:null;
     if(!encryptedToken)throw new Error('Missing offline access');
+    stage='registry_save';
     if(reuse)await registry('oauth',uid,{email:p.email,name:existing.name,encryptedToken});
     else{
+     stage='storage_create';
      const stored=await provisionUserStorage(tokens.access_token,uid);
+     stage='registry_save';
      await registry('linkGoogle',uid,{email:p.email,encryptedToken,ids:stored.ids,sheetUrl:stored.sheetUrl,folderUrl:stored.folderUrl});
     }
     return redirect('/?googleLinked=1',[...(linkedBrowser?.sub===uid?[sessionCookie({sub:uid,name:existing?.name??p.name??p.email,email:p.email,picture,provider:'line'})]:[]),setCookie('dayzi_oauth','',0)]);
    }
    const user={sub:p.sub,email:p.email,name:p.name??p.email,picture};
    if(!tokens.refresh_token)throw new Error('Missing offline access');
+   stage='registry_save';
    await registry('oauth',p.sub,{email:p.email,name:p.name,encryptedToken:encryptSecret(tokens.refresh_token,p.sub,env('TOKEN_ENCRYPTION_KEY'))});
    return redirect('/?connected=1',[sessionCookie(user),setCookie('dayzi_oauth','',0)]);
-  }catch{return redirect('/?error=google',[setCookie('dayzi_oauth','',0)]);}
+  }catch(error){
+   const rawStatus=Number(error?.status??error?.response?.status),status=Number.isInteger(rawStatus)&&rawStatus>=400&&rawStatus<=599?rawStatus:0;
+   const providerCode=error?.response?.data?.error;
+   const reason=['invalid_client','invalid_grant','access_denied','invalid_scope'].includes(providerCode)?providerCode:'failed';
+   console.error('dayzi-google-callback',{stage,status,reason});
+   return redirect('/?error=google&step='+stage,[setCookie('dayzi_oauth','',0)]);
+  }
  }
  if(path==='line/webhook')return await handleLineWebhook(req,{origin,accountData});
  if(req.method!=='GET'&&req.headers.get('origin')!==origin)throw Object.assign(new Error('คำขอไม่ได้มาจากแอปนี้'),{status:403});

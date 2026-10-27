@@ -4,6 +4,19 @@ import {OAuth2Client} from 'google-auth-library';
 import handler from '../server/api.mjs';
 import {signSession,verifySession,encryptSecret} from '../server/security.mjs';
 
+test('Google callback reports a safe failing stage without logging credentials',async t=>{
+ const vars={SESSION_SECRET:'test-secret',GOOGLE_CLIENT_ID:'client',GOOGLE_CLIENT_SECRET:'secret'},prior=Object.fromEntries(Object.keys(vars).map(k=>[k,process.env[k]]));Object.assign(process.env,vars);
+ const logs=[];t.mock.method(console,'error',(...args)=>logs.push(args));
+ t.mock.method(OAuth2Client.prototype,'getToken',async()=>{throw Object.assign(new Error('private-refresh-token'),{response:{status:401,data:{error:'invalid_client',refresh_token:'private-refresh-token'}}});});
+ try{
+  const state=signSession({sub:'state',verifier:'verifier'},vars.SESSION_SECRET);
+  const r=await handler(new Request('https://dayzi.test/api/google/callback?state=state&code=secret-code',{headers:{Cookie:'dayzi_oauth='+state}}));
+  assert.equal(r.headers.get('location'),'/?error=google&step=token_exchange');assert.equal(logs.length,1);
+  assert.equal(logs[0][1].stage,'token_exchange');assert.equal(logs[0][1].status,401);
+  assert.equal(JSON.stringify(logs).includes('private-refresh-token'),false);assert.equal(JSON.stringify(logs).includes('secret-code'),false);
+ }finally{for(const [k,v]of Object.entries(prior))if(v===undefined)delete process.env[k];else process.env[k]=v;}
+});
+
 test('Google reconnect keeps LINE identity, refresh token and existing storage and updates the profile',async t=>{
  const vars={SESSION_SECRET:'test-secret',TOKEN_ENCRYPTION_KEY:Buffer.alloc(32,1).toString('base64'),REGISTRY_URL:'https://registry.example/exec',REGISTRY_SECRET:'secret',GOOGLE_CLIENT_ID:'client',GOOGLE_CLIENT_SECRET:'client-secret'};
  const prior=Object.fromEntries(Object.keys(vars).map(k=>[k,process.env[k]]));Object.assign(process.env,vars);
@@ -23,6 +36,6 @@ test('Google reconnect keeps LINE identity, refresh token and existing storage a
   assert.equal(session.sub,uid);assert.equal(session.provider,'line');assert.equal(session.picture,'https://lh3.googleusercontent.com/photo');
   const count=calls.length,otherSession=signSession({sub:'line:U'+'b'.repeat(32),provider:'line'},vars.SESSION_SECRET);
   const switched=await handler(new Request('https://dayzi.test/api/google/callback?state=state&code=code',{headers:{Cookie:'dayzi_oauth='+state+'; dayzi_session='+otherSession}}));
-  assert.equal(switched.headers.get('location'),'/?error=google');assert.equal(calls.length,count);assert.equal(switched.headers.getSetCookie().some(c=>c.startsWith('dayzi_session=')),false);
+  assert.equal(switched.headers.get('location'),'/?error=google&step=state');assert.equal(calls.length,count);assert.equal(switched.headers.getSetCookie().some(c=>c.startsWith('dayzi_session=')),false);
  }finally{for(const [k,v]of Object.entries(prior))if(v===undefined)delete process.env[k];else process.env[k]=v;}
 });
