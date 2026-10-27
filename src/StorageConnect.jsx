@@ -6,9 +6,9 @@ import {parseStorageUrls} from './model.mjs';
 const safe=(url,host)=>{try{const u=new URL(url);return u.protocol==='https:'&&u.hostname===host&&!u.username&&!u.password?u.href:'#';}catch{return '#';}};
 
 // One place to connect storage: log in with LINE first, then either one-tap Google or paste exactly two links.
-export default function StorageConnect({user,config,connection,tell}){
+export default function StorageConnect({user,config,connection,tell,loadError=false}){
  const connected=connection?.status==='ready',googleLinked=connected&&connection.auth==='oauth';
- const [tab,setTab]=useState('links'),[sheetUrl,setSheetUrl]=useState(''),[folderUrl,setFolderUrl]=useState(''),[busy,setBusy]=useState(false),[copied,setCopied]=useState(false);
+ const [tab,setTab]=useState(config.googleLink?'google':'links'),[sheetUrl,setSheetUrl]=useState(''),[folderUrl,setFolderUrl]=useState(''),[busy,setBusy]=useState(false),[copied,setCopied]=useState(false);
  const addFriend=()=>{if(config.lineBotId)window.open(`https://line.me/R/ti/p/${encodeURIComponent(config.lineBotId)}`,'_blank','noopener,noreferrer');};
  const copy=()=>{navigator.clipboard?.writeText(config.serviceEmail).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);}).catch(()=>tell('คัดลอกไม่สำเร็จ กรุณาคัดลอกเอง','error'));};
  async function connectLinks(){
@@ -26,7 +26,7 @@ export default function StorageConnect({user,config,connection,tell}){
   try{await api('storage/disconnect',{method:'DELETE',body:JSON.stringify({expectedVersion:connection.version})});location.reload();}catch(e){tell(e.message,'error');}
  }
 
- const status=connected?['พร้อมใช้งาน','ready']:user?['ยังไม่เชื่อมพื้นที่เก็บข้อมูล','']:['ยังไม่ได้เข้าสู่ระบบ',''];
+ const status=loadError?['ต้องเชื่อมต่อใหม่','']:connected?['พร้อมใช้งาน','ready']:user?['ยังไม่เชื่อมพื้นที่เก็บข้อมูล','']:['ยังไม่ได้เข้าสู่ระบบ',''];
  return <section className="card storage-connect">
   <header className="sc-head"><span className="sc-icon">{connected?<ShieldCheck size={22}/>:<Cloud size={22}/>}</span><div><h3>พื้นที่เก็บข้อมูลของคุณ</h3><p>ข้อมูลทั้งหมดอยู่ใน Sheet และ Drive ของคุณเอง ไม่ปนกับของคนอื่น</p></div><span className={`connection-label ${status[1]}`}>{status[0]}</span></header>
 
@@ -45,13 +45,16 @@ export default function StorageConnect({user,config,connection,tell}){
     <li><span><FolderOpen size={18}/></span><div><strong>Google Drive</strong><small>โฟลเดอร์เก็บไฟล์ของคุณ</small></div><a className="secondary-button small" href={safe(connection.driveFolderUrl,'drive.google.com')} target="_blank" rel="noopener noreferrer">เปิด<ExternalLink size={12}/></a></li>
    </ul>
    <p className="sc-note">{googleLinked?'เชื่อมด้วยบัญชี Google ของคุณ ถอนสิทธิ์ได้ที่ myaccount.google.com/permissions':'เชื่อมด้วยการแชร์ให้บัญชีระบบของ Dayzi เป็น Editor'}</p>
-   <div className="sc-actions">{googleLinked&&config.googleLink&&<a className="text-button" href="/api/google/start?link=1">เชื่อมบัญชี Google ใหม่</a>}<button className="text-button danger" onClick={disconnect}>ยกเลิกการเชื่อมต่อ</button></div>
+   <div className="sc-actions">{config.googleLink&&<a className="primary-button sc-big" href="/api/google/start?link=1">{googleLinked?'เข้าสู่ระบบ Google ใหม่':'เชื่อม Google ของฉัน'}</a>}<button className="text-button danger" onClick={disconnect}>ยกเลิกการเชื่อมต่อ</button></div>
+   {!googleLinked&&config.googleLink&&<p className="sc-note">เข้าสู่ Google ครั้งแรกเพื่อสร้าง Sheet และโฟลเดอร์ใหม่ในบัญชีของคุณ ข้อมูลเดิมจะยังอยู่ที่เดิม</p>}
+   {googleLinked&&<p className="sc-note">เข้าสู่บัญชี Google เดิมอีกครั้งได้เมื่อสิทธิ์หมดอายุ ระบบจะใช้ Sheet และโฟลเดอร์เดิม</p>}
+   {!config.googleLink&&<p className="sc-note" role="status">การเข้าสู่ระบบด้วย Google ยังไม่พร้อม ผู้ดูแลต้องเปิดการเชื่อมต่อก่อน</p>}
   </div>}
 
   {user&&!connected&&<div className="sc-body">
    {config.googleLink&&<div className="sc-tabs" role="tablist"><button role="tab" aria-selected={tab==='links'} className={tab==='links'?'active':''} onClick={()=>setTab('links')}>วางลิงก์ 2 อัน</button><button role="tab" aria-selected={tab==='google'} className={tab==='google'?'active':''} onClick={()=>setTab('google')}>หรือเชื่อม Google</button></div>}
    {tab==='google'&&config.googleLink?<div className="sc-pane">
-    <p>กดครั้งเดียว เลือกบัญชี Google แล้วกดอนุญาต เดซี่จะสร้าง Sheet และโฟลเดอร์ให้ใน Drive ของคุณเอง</p>
+    <p>เข้าสู่ Google และกดอนุญาตครั้งแรก เดซี่จะสร้าง Sheet และโฟลเดอร์ให้ในบัญชีของคุณเอง ครั้งต่อไปเชื่อมให้อัตโนมัติ และเข้าสู่ระบบใหม่ได้เมื่อสิทธิ์หมดอายุ</p>
     <a className="primary-button sc-big" href="/api/google/start?link=1"><Cloud size={19}/>เชื่อม Google ของฉัน</a>
     <p className="sc-note">เดซี่เห็นเฉพาะไฟล์ที่เดซี่สร้างเอง ไม่เห็นไฟล์อื่นใน Drive ของคุณ</p>
    </div>:<div className="sc-pane">

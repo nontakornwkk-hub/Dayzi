@@ -1,4 +1,5 @@
 import {randomBytes,createHash,createHmac,timingSafeEqual} from 'node:crypto';
+import {safeProfilePicture} from '../src/profile.mjs';
 import {generateIntentPlan} from './intent-planner.mjs';
 import {readReceiptImage} from './receipt-vision.mjs';
 import { generateGeminiReply, geminiStreamResponse, publicGeminiConfig } from './assistant.mjs';
@@ -7,7 +8,7 @@ import {registry} from './registry.mjs';
 import {LINK_SCOPES,LINE_UID,readLinkToken,provisionUserStorage} from './google-link.mjs';
 import {personalSheetRequest} from './personal-sheet.mjs';
 import {limitedBytes,startUpload,uploadChunk,CHUNK_SIZE} from './files.mjs';
-import {lineAuthorizationUrl,exchangeLineIdentity,safeLineDraft} from './line.mjs';
+import {lineAuthorizationUrl,exchangeLineIdentity,safeLineDraft,lineProfilePicture} from './line.mjs';
 import {handleLineWebhook} from './line-bot.mjs';
 import {oauth,accessToken,googleFetch,inspectStorage,initializeStorage,readRanges,encodeData,decodeData,validateData,serviceAccountEmail,encodeChat,sanitizeChatMutation} from './google.mjs';
 import {parseStorageUrls,parseQuickEvent,localDate,dateAdd} from '../src/model.mjs';
@@ -34,14 +35,43 @@ const storageMode=a=>a.authProvider==='line'&&!a.encryptedToken?'service':'oauth
 async function accountData(a,origin){ready(a);const token=await accessToken(a,origin);const data=decodeData(await readRanges(token,a.connection.spreadsheetId),a.uid);data.settings={...data.settings,sheetUrl:a.connection.spreadsheetUrl,folderUrl:a.connection.driveFolderUrl};return {data,token};}
 
 export default async function handler(req){const url=new URL(req.url),origin=url.origin;const path=url.pathname.replace(/^\/\.netlify\/functions\/api\/?/,'').replace(/^\/api\/?/,'');try{
- if(path==='status'){let u=null,a=null;if(backendConfigured()){try{u=actor(req);a=await registry('get',u.sub);}catch{u=null;}}return json({user:u?{sub:u.sub,name:u.name,email:u.email,provider:a?.authProvider??u.provider??'google'}:null,connection:connection(a),config:options()});}
+ if(path==='status'){let u=null,a=null;if(backendConfigured()){try{u=actor(req);a=await registry('get',u.sub);if(!safeProfilePicture(u.picture)&&LINE_UID.test(u.sub))u.picture=await lineProfilePicture(u.sub.slice(5));}catch{u=null;}}return json({user:u?{sub:u.sub,name:u.name,email:u.email,picture:safeProfilePicture(u.picture),provider:a?.authProvider??u.provider??'google'}:null,connection:connection(a),config:options()});}
  if(path==='line/start'){if(!lineConfigured())return json({error:'เจ้าของระบบต้องตั้ง LINE Login และพื้นที่ Sheets กลางก่อน ผู้ใช้ไม่ต้องเชื่อม Google เอง'},503);const state=randomBytes(24).toString('hex'),nonce=randomBytes(24).toString('hex'),verifier=randomBytes(48).toString('base64url');return redirect(lineAuthorizationUrl(origin,{state,nonce,verifier}),[setCookie('dayzi_line',signSession({sub:state,nonce,verifier,draft:safeLineDraft(url.searchParams.get('draft'))},env('SESSION_SECRET')),600)]);}
- if(path==='line/callback'){try{if(!lineConfigured())throw new Error('Not configured');const state=verifySession(cookie(req,'dayzi_line'),env('SESSION_SECRET'));if(state.sub!==url.searchParams.get('state')||Date.now()/1000-state.iat>600)throw new Error('Invalid state');const identity=await exchangeLineIdentity(origin,{code:url.searchParams.get('code'),nonce:state.nonce,verifier:state.verifier});await registry('lineOnboard',identity.uid,{lineId:identity.lineId,name:identity.name});return redirect('/?connected=line'+(state.draft?'&source=line&draft='+encodeURIComponent(JSON.stringify(state.draft)):''),[sessionCookie({sub:identity.uid,name:identity.name,provider:'line'}),setCookie('dayzi_line','',0)]);}catch{return redirect('/?error=line',[setCookie('dayzi_line','',0)]);}}
+ if(path==='line/callback'){try{if(!lineConfigured())throw new Error('Not configured');const state=verifySession(cookie(req,'dayzi_line'),env('SESSION_SECRET'));if(state.sub!==url.searchParams.get('state')||Date.now()/1000-state.iat>600)throw new Error('Invalid state');const identity=await exchangeLineIdentity(origin,{code:url.searchParams.get('code'),nonce:state.nonce,verifier:state.verifier});await registry('lineOnboard',identity.uid,{lineId:identity.lineId,name:identity.name});return redirect('/?connected=line'+(state.draft?'&source=line&draft='+encodeURIComponent(JSON.stringify(state.draft)):''),[sessionCookie({sub:identity.uid,name:identity.name,picture:identity.picture,provider:'line'}),setCookie('dayzi_line','',0)]);}catch{return redirect('/?error=line',[setCookie('dayzi_line','',0)]);}}
  // แอปที่ติดตั้งไว้ (PWA) และเบราว์เซอร์มือถือเก็บคุกกี้แยกจาก LINE จึงให้ยืนยันในแอป LINE แล้วรอผลที่นี่ ไม่ต้องเด้งไปมา
  if(path==='line/handoff'&&req.method==='POST'){if(!lineConfigured()||!options().line)return json({error:'ยังเข้าสู่ระบบผ่านแอป LINE ไม่ได้'},503);const id=randomBytes(12).toString('hex');return json({id,url:`https://line.me/R/oaMessage/${encodeURIComponent(env('LINE_BOT_ID'))}/?${encodeURIComponent('เข้าสู่ระบบ '+id)}`},200,{'Set-Cookie':setCookie('dayzi_handoff',signSession({sub:id},env('SESSION_SECRET'),undefined,600),600)});}
  if(path==='line/handoff'){let id;try{id=verifySession(cookie(req,'dayzi_handoff'),env('SESSION_SECRET')).sub;if(!HANDOFF_ID.test(id))throw new Error('bad');}catch{return json({error:'คำขอเข้าสู่ระบบหมดอายุ กรุณาเริ่มใหม่'},410);}const pending=await registry('get','handoff:'+id),uid=pending?.linkCode?.expires>Date.now()?pending.linkCode.code:null;if(!LINE_UID.test(uid??''))return json({pending:true});await registry('linkCode','handoff:'+id,{code:'used'});const account=await registry('lineOnboard',uid,{lineId:uid.slice(5)});const res=json({ok:true});res.headers.append('Set-Cookie',sessionCookie({sub:uid,name:account?.name??'คุณ',provider:'line'}));res.headers.append('Set-Cookie',setCookie('dayzi_handoff','',0));return res;}
- if(path==='google/start'){if(!configured())return json({error:'เจ้าของระบบต้องตั้งค่า Google OAuth และทะเบียนบัญชีก่อน'},503);const state=randomBytes(24).toString('hex'),verifier=randomBytes(48).toString('base64url'),challenge=createHash('sha256').update(verifier).digest('base64url');let link=null;const linkParam=url.searchParams.get('link');if(linkParam){try{link=linkParam==='1'?(()=>{const u=actor(req);if(!LINE_UID.test(u.sub))throw new Error('not line');return u.sub;})():readLinkToken(linkParam,env('SESSION_SECRET'));}catch{return redirect('/?error=google');}}const stateCookie=signSession({sub:state,verifier,...(link?{link}:{})},env('SESSION_SECRET'));const authUrl=oauth(origin).generateAuthUrl({access_type:'offline',prompt:'consent',scope:link?LINK_SCOPES:['openid','email','profile','https://www.googleapis.com/auth/drive.file'],state,code_challenge:challenge,code_challenge_method:'S256'});return redirect(authUrl,[setCookie('dayzi_oauth',stateCookie,600)]);}
- if(path==='google/callback'){try{const state=verifySession(cookie(req,'dayzi_oauth'),env('SESSION_SECRET'));if(state.sub!==url.searchParams.get('state')||Date.now()/1000-state.iat>600)throw new Error('Invalid OAuth state');const client=oauth(origin),{tokens}=await client.getToken({code:url.searchParams.get('code'),codeVerifier:state.verifier});const ticket=await client.verifyIdToken({idToken:tokens.id_token,audience:env('GOOGLE_CLIENT_ID')});const p=ticket.getPayload();if(!p.sub||!p.email_verified)throw new Error('Unverified identity');if(state.link){const uid=state.link;if(!LINE_UID.test(uid)||!tokens.refresh_token)throw new Error('Cannot link');const encryptedToken=encryptSecret(tokens.refresh_token,uid,env('TOKEN_ENCRYPTION_KEY')),existing=await registry('get',uid);if(existing?.connection?.status==='ready'&&existing.connection.auth==='oauth')await registry('oauth',uid,{email:p.email,name:existing.name,encryptedToken});else{const stored=await provisionUserStorage(tokens.access_token,uid);await registry('linkGoogle',uid,{email:p.email,encryptedToken,ids:stored.ids,sheetUrl:stored.sheetUrl,folderUrl:stored.folderUrl});}return redirect('/?googleLinked=1',[setCookie('dayzi_oauth','',0)]);}const user={sub:p.sub,email:p.email,name:p.name??p.email};if(!tokens.refresh_token)throw new Error('Missing offline access');await registry('oauth',p.sub,{email:p.email,name:p.name,encryptedToken:encryptSecret(tokens.refresh_token,p.sub,env('TOKEN_ENCRYPTION_KEY'))});return redirect('/?connected=1',[sessionCookie(user),setCookie('dayzi_oauth','',0)]);}catch{return redirect('/?error=google',[setCookie('dayzi_oauth','',0)]);}}
+ if(path==='google/start'){if(!configured())return json({error:'เจ้าของระบบต้องตั้งค่า Google OAuth และทะเบียนบัญชีก่อน'},503);const state=randomBytes(24).toString('hex'),verifier=randomBytes(48).toString('base64url'),challenge=createHash('sha256').update(verifier).digest('base64url');let link=null;const linkParam=url.searchParams.get('link');if(linkParam){try{link=linkParam==='1'?(()=>{const u=actor(req);if(!LINE_UID.test(u.sub))throw new Error('not line');return u.sub;})():readLinkToken(linkParam,env('SESSION_SECRET'));}catch{return redirect('/?error=google');}}const stateCookie=signSession({sub:state,verifier,...(link?{link,linkSession:linkParam==='1'}:{})},env('SESSION_SECRET'));const authUrl=oauth(origin).generateAuthUrl({access_type:'offline',prompt:'consent select_account',scope:link?LINK_SCOPES:['openid','email','profile','https://www.googleapis.com/auth/drive.file'],state,code_challenge:challenge,code_challenge_method:'S256'});return redirect(authUrl,[setCookie('dayzi_oauth',stateCookie,600)]);}
+ if(path==='google/callback'){
+  try{
+   const state=verifySession(cookie(req,'dayzi_oauth'),env('SESSION_SECRET'));
+   if(state.sub!==url.searchParams.get('state')||Date.now()/1000-state.iat>600)throw new Error('Invalid OAuth state');
+   let linkedBrowser=null;
+   if(state.link){try{linkedBrowser=actor(req);}catch{}if(state.linkSession&&linkedBrowser?.sub!==state.link)throw new Error('LINE session changed during Google connection');}
+   const client=oauth(origin),{tokens}=await client.getToken({code:url.searchParams.get('code'),codeVerifier:state.verifier});
+   const ticket=await client.verifyIdToken({idToken:tokens.id_token,audience:env('GOOGLE_CLIENT_ID')}),p=ticket.getPayload();
+   if(!p.sub||!p.email_verified)throw new Error('Unverified identity');
+   const picture=safeProfilePicture(p.picture);
+   if(state.link){
+    const uid=state.link;if(!LINE_UID.test(uid))throw new Error('Cannot link');
+    const existing=await registry('get',uid);
+    const reuse=existing?.connection?.auth==='oauth'&&existing?.connection?.status==='ready';
+    if(reuse&&existing.email?.toLowerCase()!==p.email?.toLowerCase())return redirect('/?error=google_account',[setCookie('dayzi_oauth','',0)]);
+    const encryptedToken=tokens.refresh_token?encryptSecret(tokens.refresh_token,uid,env('TOKEN_ENCRYPTION_KEY')):reuse?existing.encryptedToken:null;
+    if(!encryptedToken)throw new Error('Missing offline access');
+    if(reuse)await registry('oauth',uid,{email:p.email,name:existing.name,encryptedToken});
+    else{
+     const stored=await provisionUserStorage(tokens.access_token,uid);
+     await registry('linkGoogle',uid,{email:p.email,encryptedToken,ids:stored.ids,sheetUrl:stored.sheetUrl,folderUrl:stored.folderUrl});
+    }
+    return redirect('/?googleLinked=1',[...(linkedBrowser?.sub===uid?[sessionCookie({sub:uid,name:existing?.name??p.name??p.email,email:p.email,picture,provider:'line'})]:[]),setCookie('dayzi_oauth','',0)]);
+   }
+   const user={sub:p.sub,email:p.email,name:p.name??p.email,picture};
+   if(!tokens.refresh_token)throw new Error('Missing offline access');
+   await registry('oauth',p.sub,{email:p.email,name:p.name,encryptedToken:encryptSecret(tokens.refresh_token,p.sub,env('TOKEN_ENCRYPTION_KEY'))});
+   return redirect('/?connected=1',[sessionCookie(user),setCookie('dayzi_oauth','',0)]);
+  }catch{return redirect('/?error=google',[setCookie('dayzi_oauth','',0)]);}
+ }
  if(path==='line/webhook')return await handleLineWebhook(req,{origin,accountData});
  if(req.method!=='GET'&&req.headers.get('origin')!==origin)throw Object.assign(new Error('คำขอไม่ได้มาจากแอปนี้'),{status:403});
  if(path==='personal-sheet'){if(req.method!=='POST')return json({error:'ใช้ POST สำหรับการเชื่อมต่อ Sheets ส่วนตัว'},405);return json(await personalSheetRequest(await body(req)));}

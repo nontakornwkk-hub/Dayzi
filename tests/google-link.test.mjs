@@ -14,7 +14,7 @@ test('link tokens belong to one LINE user, expire quickly and cannot be forged o
 });
 
 test('Google link asks only for drive.file and no spreadsheet-wide or full Drive scope',()=>{
- assert.deepEqual(LINK_SCOPES,['openid','email','https://www.googleapis.com/auth/drive.file']);
+ assert.deepEqual(LINK_SCOPES,['openid','email','profile','https://www.googleapis.com/auth/drive.file']);
 });
 
 test('provisioning creates Dayzi folder, files folder and sheet inside the user own Drive and prepares tables',async()=>{

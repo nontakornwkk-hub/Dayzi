@@ -1,8 +1,18 @@
 import {createHash} from 'node:crypto';
 import {env} from './security.mjs';
+import {safeProfilePicture} from '../src/profile.mjs';
 
 export function lineLoginConfig() {
   return { channelId:env('LINE_LOGIN_CHANNEL_ID'), channelSecret:env('LINE_LOGIN_CHANNEL_SECRET') };
+}
+
+export async function lineProfilePicture(lineId){
+ if(!/^U[0-9a-f]{32}$/i.test(lineId??'')||!env('LINE_CHANNEL_ACCESS_TOKEN'))return '';
+ try{
+  const r=await fetch(`https://api.line.me/v2/bot/profile/${lineId}`,{headers:{Authorization:`Bearer ${env('LINE_CHANNEL_ACCESS_TOKEN')}`},signal:AbortSignal.timeout(5000)});
+  if(!r.ok)return '';
+  const profile=await r.json();return profile.userId===lineId?safeProfilePicture(profile.pictureUrl):'';
+ }catch{return '';}
 }
 
 export function safeLineDraft(raw) {
@@ -25,7 +35,7 @@ export function validateLineClaims(claims,{channelId,nonce,now=Math.floor(Date.n
   if(claims?.iss!=='https://access.line.me'||String(claims.aud)!==String(channelId)||claims.nonce!==nonce||!Number.isFinite(claims.exp)||claims.exp<=now||!/^U[0-9a-f]{32}$/i.test(claims.sub??'')) {
     throw Object.assign(new Error('ยืนยันบัญชี LINE ไม่สำเร็จ'),{status:401});
   }
-  return {uid:`line:${claims.sub}`,lineId:claims.sub,name:String(claims.name??'คุณ').slice(0,100),provider:'line'};
+  return {uid:`line:${claims.sub}`,lineId:claims.sub,name:String(claims.name??'คุณ').slice(0,100),picture:safeProfilePicture(claims.picture),provider:'line'};
 }
 
 export async function exchangeLineIdentity(origin,{code,verifier,nonce},config=lineLoginConfig()) {

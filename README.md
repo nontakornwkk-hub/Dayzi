@@ -4,6 +4,10 @@
 
 ## Deploy: GitHub + Vercel
 
+Google storage connection uses the user's own Google consent on first use; a returning user can select **เข้าสู่ระบบ Google ใหม่** in Settings or the connection error banner. Reconnect with the same Google account to keep the existing Sheet and Drive folder. The app refreshes authorization automatically while the refresh token remains valid. Verified Google/LINE profile photos appear in the account controls, with initials as a fallback.
+
+Google sign-in requires `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` on Vercel, plus the exact OAuth redirect `https://dayzi-lyart.vercel.app/api/google/callback` in the Google Cloud web client. It requests `openid`, `email`, `profile`, and `drive.file`; users approve their own first connection. Creating or editing that client currently requires the project owner's Google Cloud two-step verification. Never commit client secrets or refresh tokens.
+
 1. Push this folder to a **private** GitHub repository (`.gitignore` already excludes `.env.local`, `netlify-import.env`, the service-account JSON and zip files).
 2. In Vercel choose **Add New → Project**, import the repository, keep the detected settings (`vercel.json` sets build `npm run build`, output `dist`). Every push to the main branch then deploys automatically.
 3. In **Project → Settings → Environment Variables** add the server values (never commit them): `SESSION_SECRET`, `TOKEN_ENCRYPTION_KEY`, `REGISTRY_URL`, `REGISTRY_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `LINE_CHANNEL_ACCESS_TOKEN`, `LINE_CHANNEL_SECRET`, `LINE_BOT_ID`, `LINE_LOGIN_CHANNEL_ID`, `LINE_LOGIN_CHANNEL_SECRET`, `GEMINI_API_KEY_1`…`GEMINI_API_KEY_5`, `GOOGLE_SERVICE_ACCOUNT_JSON`, `REMINDER_WORKER_SECRET`.

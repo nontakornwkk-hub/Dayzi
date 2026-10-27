@@ -2,9 +2,10 @@ import React,{useState} from 'react';
 import {Bell,MessageCircle,LogOut,Check,Moon,UserRound,ExternalLink,Loader2} from 'lucide-react';
 import {api} from './storage.mjs';
 import StorageConnect from './StorageConnect.jsx';
+import ProfilePhoto from './ProfilePhoto.jsx';
 
 // Mobile-first settings: who you are, where your data lives, how Dayzi reaches you.
-export default function SettingsPage({data,user,config,connection,persist,tell,onLogout}){
+export default function SettingsPage({data,user,config,connection,persist,tell,onLogout,loadError=false}){
  const [form,setForm]=useState({...data.settings}),[busy,setBusy]=useState(false);
  const update=(key,value)=>setForm(f=>({...f,[key]:value}));
  const dirty=['name','quietStart','quietEnd'].some(k=>(form[k]??'')!==(data.settings[k]??''));
@@ -24,12 +25,12 @@ export default function SettingsPage({data,user,config,connection,persist,tell,o
   <header className="sv-head"><h1>ตั้งค่า</h1><p>บัญชี พื้นที่เก็บข้อมูล และการแจ้งเตือน</p></header>
 
   {user&&<section className="card sv-account">
-   <span className="sv-avatar">{(user.name??'D').slice(0,1)}</span>
+   <span className="sv-avatar"><ProfilePhoto user={user}/></span>
    <div><strong>{user.name}</strong><small>{lineUser?<><MessageCircle size={13}/> เข้าสู่ระบบด้วย LINE</>:'บัญชีของคุณ'}</small></div>
    <button className="icon-button sv-logout" aria-label="ออกจากระบบ" onClick={onLogout}><LogOut size={18}/></button>
   </section>}
 
-  <StorageConnect user={user} config={config} connection={connection} tell={tell}/>
+  <StorageConnect user={user} config={config} connection={connection} tell={tell} loadError={loadError}/>
 
   {config.lineBotId&&<section className="card sv-row-card">
    <span className="sv-icon line"><MessageCircle size={20}/></span>

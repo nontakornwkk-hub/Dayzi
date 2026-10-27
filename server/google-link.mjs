@@ -2,7 +2,7 @@ import {signSession,verifySession} from './security.mjs';
 import {googleFetch,initializeStorage} from './google.mjs';
 
 // Each LINE user connects their own Google account: Dayzi only gets access to files it creates there (drive.file).
-export const LINK_SCOPES=['openid','email','https://www.googleapis.com/auth/drive.file'];
+export const LINK_SCOPES=['openid','email','profile','https://www.googleapis.com/auth/drive.file'];
 export const LINE_UID=/^line:U[0-9a-f]{32}$/i;
 const MAX_AGE=900;
 
