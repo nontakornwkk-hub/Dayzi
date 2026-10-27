@@ -86,3 +86,11 @@ test('without Google sign-in configured the connect card opens web settings for 
  try{const {reply}=await send('เพิ่มงาน ซื้อนม พรุ่งนี้');const card=JSON.stringify(reply);assert.equal(reply.type,'flex');assert.ok(card.includes('https://dayzi.test/?page=settings'));assert.ok(!card.includes('google/start'));}
  finally{process.env.GOOGLE_CLIENT_ID=saved[0];process.env.GOOGLE_CLIENT_SECRET=saved[1];}
 });
+test('a sign-in request from another device needs a confirm tap before it is bound to this LINE account',async()=>{
+ const id='c'.repeat(24),calls=[];let reply;const sign=body=>createHmac('sha256','secret').update(body).digest('base64');
+ const send=events=>{const body=JSON.stringify({events});return bot.handleLineWebhook(new Request('https://dayzi.test/api/line/webhook',{method:'POST',headers:{'x-line-signature':sign(body)},body}),{origin:'https://dayzi.test',channelSecret:'secret',channelToken:'token',registry:async(action,owner,payload)=>{calls.push([action,owner,payload]);return {uid,connection:null};},fetch:async(url,options)=>{reply=JSON.parse(options.body);return new Response('{}');}});};
+ await send([{type:'message',source:{type:'user',userId:lineId},replyToken:'r',message:{type:'text',text:'เข้าสู่ระบบ '+id}}]);
+ assert.equal(reply.messages[0].template.type,'confirm');assert.equal(calls.some(c=>c[0]==='linkCode'),false);
+ await send([{type:'postback',source:{type:'user',userId:lineId},replyToken:'r',postback:{data:JSON.stringify({a:'login',id})}}]);
+ assert.deepEqual(calls.find(c=>c[0]==='linkCode'),['linkCode','handoff:'+id,{code:uid}]);assert.match(reply.messages[0].text,/เข้าสู่ระบบแล้ว/);
+});

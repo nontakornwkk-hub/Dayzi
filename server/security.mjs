@@ -1,6 +1,6 @@
 import {createHmac,randomBytes,createCipheriv,createDecipheriv,timingSafeEqual} from 'node:crypto';
-export function signSession(payload,key,now=Math.floor(Date.now()/1000)) {
-  const body=Buffer.from(JSON.stringify({...payload,iat:now,exp:now+86400})).toString('base64url');
+export function signSession(payload,key,now=Math.floor(Date.now()/1000),ttl=86400) {
+  const body=Buffer.from(JSON.stringify({...payload,iat:now,exp:now+ttl})).toString('base64url');
   return `${body}.${createHmac('sha256',key).update(body).digest('base64url')}`;
 }
 export function verifySession(token,key,now=Math.floor(Date.now()/1000)) {

@@ -10,6 +10,9 @@ import {localDate,occursOn,dateAdd,thaiDate} from '../src/model.mjs';
 import {taskMessage,eventMessage,financeMessage,fileMessage,summaryMessage,todayMessage,proposalMessage,noteMessage,connectMessage} from './line-cards.mjs';
 import {createLinkToken} from './google-link.mjs';
 
+// คำขอจากแอป/เบราว์เซอร์ที่กดเข้าสู่ระบบด้วย LINE ให้เจ้าของบัญชีกดยืนยันก่อน กันลิงก์ที่คนอื่นส่งมาหลอก
+const loginConfirmMessage=id=>({type:'template',altText:'ยืนยันเข้าสู่ระบบ Dayzi',template:{type:'confirm',text:'ยืนยันเข้าสู่ระบบ Dayzi บนอุปกรณ์ที่คุณเพิ่งกดขอใช่ไหมคะ? ถ้าไม่ได้กดเอง ให้กด "ไม่ใช่ฉัน"',actions:[{type:'postback',label:'ยืนยัน',data:JSON.stringify({a:'login',id}),displayText:'ยืนยันเข้าสู่ระบบ'},{type:'postback',label:'ไม่ใช่ฉัน',data:JSON.stringify({a:'cancel'}),displayText:'ไม่ใช่ฉัน'}]}});
+
 // Thrown when a request needs the user's own Google storage and they have not connected it yet.
 class NeedConnect extends Error{}
 function connectReply(origin,uid,options={}){const viaWeb=!(env('GOOGLE_CLIENT_ID')&&env('GOOGLE_CLIENT_SECRET'));if(viaWeb)return connectMessage(origin,'',{...options,viaWeb});try{return connectMessage(origin,createLinkToken(uid,env('SESSION_SECRET')),options);}catch{return `ต้องเชื่อม Google ของคุณก่อนนะคะ เปิดเว็บเพื่อเชื่อม: ${origin}`;}}
@@ -37,8 +40,9 @@ export async function handleLineWebhook(request,options={}) {
         reply=connectReply(origin,uid,{welcome:true});
       } else {
         const text=event.message?.text??'';
-        const legacyLink=text.match(/^เชื่อม\s+([A-F0-9]{10})$/i);
-        if(legacyLink) {
+        const legacyLink=text.match(/^เชื่อม\s+([A-F0-9]{10})$/i),loginRequest=text.match(/^เข้าสู่ระบบ\s+([a-f0-9]{24})$/);
+        if(loginRequest)reply=loginConfirmMessage(loginRequest[1]);
+        else if(legacyLink) {
           await registry('consumeLink',null,{code:legacyLink[1].toUpperCase(),lineId});
           reply='เชื่อมบัญชี LINE แล้วค่ะ 🌼';
         } else {
@@ -46,8 +50,13 @@ export async function handleLineWebhook(request,options={}) {
           if(!account)account=await registry('lineOnboard',uid,{lineId});
           if(event.type==='postback') {
             const change=JSON.parse(event.postback?.data??'{}');
-            if(change.a!=='cancel'&&account.connection?.status!=='ready')throw new NeedConnect();
+            if(!['cancel','login'].includes(change.a)&&account.connection?.status!=='ready')throw new NeedConnect();
             if(change.a==='cancel')reply='ยกเลิกแล้วค่ะ ไม่ได้บันทึกอะไร 🌼';
+            else if(change.a==='login'){
+              if(typeof change.id!=='string'||!/^[a-f0-9]{24}$/.test(change.id))throw new Error('Invalid login request');
+              await registry('linkCode','handoff:'+change.id,{code:uid});
+              reply='เข้าสู่ระบบแล้วค่ะ 🌼 กลับไปที่แอป Dayzi ได้เลย หน้าเว็บจะเปิดให้เองภายในไม่กี่วินาที';
+            }
             else if(change.a==='ok'){
               const {data,token}=await options.accountData(account,origin);
               const result=applyAssistantAction({name:change.n,arguments:change.g},data,localDate());
