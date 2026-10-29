@@ -1,6 +1,15 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 const local=await import('../server/local-api.mjs').catch(()=>({}));
 const config={configured:true,model:'gemini-3.8-flash'};
+
+test('local chat continues past 30 requests while retaining its short burst delay',async t=>{
+ let now=Date.UTC(2035,0,1);t.mock.method(Date,'now',()=>now);
+ const previous=process.env.GEMINI_API_KEY;process.env.GEMINI_API_KEY='test-key';
+ t.mock.method(globalThis,'fetch',async()=>Response.json({status:'completed',steps:[{type:'model_output',content:[{type:'text',text:'พร้อมคุยค่ะ'}]}]}));
+ const request=()=>new Request('http://localhost:5173/api/assistant/local',{method:'POST',headers:{Origin:'http://localhost:5173','Content-Type':'application/json'},body:JSON.stringify({message:'hello'})});
+ try{for(let i=0;i<35;i++){now+=3000;const r=await local.handleLocalApi(request(),{config});assert.equal(r.status,200,'request '+(i+1));}assert.equal((await local.handleLocalApi(request(),{config})).status,429);}
+ finally{if(previous===undefined)delete process.env.GEMINI_API_KEY;else process.env.GEMINI_API_KEY=previous;}
+});
 test('local Gemini endpoint is refused from non-loopback hosts and cross-origin pages',async()=>{
  assert.equal(typeof local.handleLocalApi,'function');
  for(const [url,origin]of[['https://public.example/api/assistant/local','https://public.example'],['http://localhost:5173/api/assistant/local','https://attacker.example']]){

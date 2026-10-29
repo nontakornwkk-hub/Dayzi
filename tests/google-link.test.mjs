@@ -49,6 +49,15 @@ function registry(accounts=[]){
  vm.createContext(context);vm.runInContext(source,context);
  return {saved,call:payload=>{const out=context.doPost({postData:{contents:JSON.stringify({secret:'secret',...payload})}});return JSON.parse(out.text);}};
 }
+
+test('AI chat has no daily message ceiling but still rejects a rapid repeat',()=>{
+ const today=new Date().toISOString().slice(0,10);
+ const reg=registry([{uid:lineUid,version:1,aiDay:today,aiCount:1000,aiLast:Date.now()-6000}]);
+ assert.equal(reg.call({action:'aiQuota',uid:lineUid}).ok,true);
+ assert.equal(reg.saved[0].aiCount,1001);
+ const burst=registry([{uid:lineUid,version:1,aiDay:today,aiCount:1001,aiLast:Date.now()}]);
+ assert.equal(burst.call({action:'aiQuota',uid:lineUid}).status,429);
+});
 test('registry onboarding no longer builds storage in the owner Drive',()=>{
  const reg=registry(),result=reg.call({action:'lineOnboard',uid:lineUid,lineId:lineUid.slice(5),name:'ต้น'});
  assert.equal(result.error,undefined);assert.equal(result.authProvider,'line');assert.equal(result.connection,undefined);

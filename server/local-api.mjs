@@ -4,7 +4,7 @@ import { json } from './security.mjs';
 import { generateIntentPlan } from './intent-planner.mjs';
 import { readReceiptImage } from './receipt-vision.mjs';
 
-let quota = { day: '', count: 0, last: 0 };
+let lastRequestAt = 0;
 
 export async function handleLocalApi(request, options = {}) {
   const url = new URL(request.url);
@@ -53,11 +53,10 @@ export async function handleLocalApi(request, options = {}) {
     if (typeof data.message !== 'string' || !data.message.trim() || data.message.length > 2000) {
       return json({ error: 'กรุณาใส่ข้อความไม่เกิน 2,000 ตัวอักษร' }, 400);
     }
-    const now = Date.now(), day = new Date(now).toISOString().slice(0,10);
-    if (quota.day !== day) quota = { day, count: 0, last: 0 };
+    const now = Date.now();
     if (!options.generateReply) {
-      if (quota.count >= 30 || now - quota.last < 2000) return json({ error: 'ส่งคำขอ Gemini ถี่เกินไปหรือครบโควตาทดสอบวันนี้แล้ว' }, 429);
-      quota.count++; quota.last = now;
+      if (now - lastRequestAt < 2000) return json({ error: 'ส่งคำขอ Gemini ถี่เกินไป กรุณารอสักครู่แล้วลองใหม่' }, 429);
+      lastRequestAt = now;
     }
     if(data.stream&&!options.generateReply)return geminiStreamResponse({message:data.message,context:data.context,history:data.history},{config});
     const result = await (options.generateReply ?? generateGeminiReply)({ message: data.message, context: data.context, history: data.history }, { config });
