@@ -119,7 +119,8 @@ Webhook ตรวจ signature ของ LINE ก่อนทำงาน คำ
 1. สร้าง VAPID key pair ด้วย `npx web-push generate-vapid-keys` แล้วเก็บ private key เฉพาะฝั่งเซิร์ฟเวอร์
 2. ตั้ง `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` และ `REMINDER_WORKER_SECRET`
 3. ผู้ใช้กดเปิดแจ้งเตือนในตั้งค่า; iPhone ต้องเพิ่มเว็บแอปไว้หน้าจอโฮมและใช้ iOS ที่รองรับก่อน
-4. `reminder-tick` รันทุกนาทีบน published deploy แล้วเรียก background worker ที่ตรวจ shared secret
+4. ตั้ง repository secrets `SITE_URL` และ `REMINDER_WORKER_SECRET` บน GitHub ให้ตรงกับ Vercel; workflow `reminders` ตรวจทุก 5 นาที (GitHub อาจเริ่มงานช้า) โดย endpoint ตรวจ shared secret
+   - ตรวจการเชื่อมต่อโดยไม่อ่านบัญชีหรือส่งข้อความได้ด้วย `POST /api/cron/reminders?dryRun=1` พร้อม shared secret
 5. แต่ละ reminder มี claim แยกผู้ใช้/นัด/วัน/นาทีล่วงหน้า/ช่องทาง พร้อมตรวจ connection version ก่อนส่ง และใช้ retry key สำหรับ LINE
 
 การส่งสำเร็จจาก provider ไม่รับประกันว่ามือถือแสดงทันที เพราะขึ้นกับเครือข่าย สิทธิ์ ระบบปฏิบัติการ และ Focus mode การเตือนอาจช้าได้ Scheduler นี้ไม่ใช่นาฬิกาปลุกที่รับประกันเวลาถึงวินาที รองรับการตรวจย้อนหลังถึง 24 ชั่วโมง และจำกัด registry list ครั้งละ 30 บัญชีสำหรับ MVP
