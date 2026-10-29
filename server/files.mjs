@@ -1,8 +1,18 @@
 import {registry} from './registry.mjs';
+import {googleFetch} from './google.mjs';
 import {env,encryptSecret,decryptSecret} from './security.mjs';
 export const CHUNK_SIZE=3*1024*1024;
 const fail=(message,status=400)=>Object.assign(new Error(message),{status});
 const mime=value=>/^[\w.+-]+\/[\w.+-]+$/.test(value??'')?value:'application/octet-stream';
+export async function trashDriveFile(account,token,file,trashed=true){
+ if(file.ownerId!==account.uid||!file.driveId||!account.connection?.folderId)throw fail('ไฟล์นี้ไม่ได้เป็นของคุณ',403);
+ const url=`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(file.driveId)}`;
+ const meta=await googleFetch(token,url+'?fields=id,parents,trashed').then(r=>r.json());
+ if(!meta.parents?.includes(account.connection.folderId))throw fail('ไฟล์ไม่ได้อยู่ในโฟลเดอร์ที่คุณเชื่อมต่อ',403);
+ if(!!meta.trashed===trashed)return {changed:false};
+ await googleFetch(token,url,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({trashed})});
+ return {changed:true};
+}
 function uploadUrl(value){const u=new URL(value);if(u.origin!=='https://www.googleapis.com'||u.pathname!=='/upload/drive/v3/files'||!u.searchParams.get('upload_id'))throw fail('ที่อยู่อัปโหลดไม่ถูกต้อง',502);return u.href;}
 export async function limitedBytes(response,max=Infinity){const reader=response.body.getReader(),parts=[];let total=0;try{for(;;){const {value,done}=await reader.read();if(done)break;total+=value.length;if(total>max){await reader.cancel();throw fail('ข้อมูลชิ้นอัปโหลดใหญ่เกินกำหนด',413);}parts.push(Buffer.from(value));}return Buffer.concat(parts);}finally{reader.releaseLock?.();}}
 export async function startUpload(account,token,file,options={}){

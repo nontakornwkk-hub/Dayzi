@@ -41,6 +41,7 @@ export default function StorageConnect({user,config,connection,tell,loadError=fa
 
   {user&&connected&&<div className="sc-body">
    <ul className="sc-linked">
+    {connection.rootFolderUrl&&<li><span><FolderOpen size={18}/></span><div><strong>Dayzi</strong><small>โฟลเดอร์หลัก รวม Sheet และไฟล์ของคุณ</small></div><a className="secondary-button small" href={safe(connection.rootFolderUrl,'drive.google.com')} target="_blank" rel="noopener noreferrer">เปิด<ExternalLink size={12}/></a></li>}
     <li><span><FileSpreadsheet size={18}/></span><div><strong>Google Sheet</strong><small>นัดหมาย งาน โน้ต และรายการเงิน</small></div><a className="secondary-button small" href={safe(connection.spreadsheetUrl,'docs.google.com')} target="_blank" rel="noopener noreferrer">เปิด<ExternalLink size={12}/></a></li>
     <li><span><FolderOpen size={18}/></span><div><strong>Google Drive</strong><small>โฟลเดอร์เก็บไฟล์ของคุณ</small></div><a className="secondary-button small" href={safe(connection.driveFolderUrl,'drive.google.com')} target="_blank" rel="noopener noreferrer">เปิด<ExternalLink size={12}/></a></li>
    </ul>
@@ -54,7 +55,7 @@ export default function StorageConnect({user,config,connection,tell,loadError=fa
   {user&&!connected&&<div className="sc-body">
    {config.googleLink&&<div className="sc-tabs" role="tablist"><button role="tab" aria-selected={tab==='links'} className={tab==='links'?'active':''} onClick={()=>setTab('links')}>วางลิงก์ 2 อัน</button><button role="tab" aria-selected={tab==='google'} className={tab==='google'?'active':''} onClick={()=>setTab('google')}>หรือเชื่อม Google</button></div>}
    {tab==='google'&&config.googleLink?<div className="sc-pane">
-    <p>เข้าสู่ Google และกดอนุญาตครั้งแรก เดซี่จะสร้าง Sheet และโฟลเดอร์ให้ในบัญชีของคุณเอง ครั้งต่อไปเชื่อมให้อัตโนมัติ และเข้าสู่ระบบใหม่ได้เมื่อสิทธิ์หมดอายุ</p>
+    <p>{connection?.auth==='oauth'?'เข้าสู่บัญชี Google เดิมเพื่อเชื่อม Sheet และโฟลเดอร์ Dayzi เดิมกลับมา ข้อมูลที่มีอยู่จะใช้ต่อได้ทันที':'เข้าสู่ Google และกดอนุญาตครั้งแรก เดซี่จะสร้างโฟลเดอร์ Dayzi พร้อม Sheet และโฟลเดอร์เก็บไฟล์ในบัญชีของคุณเอง'}</p>
     <a className="primary-button sc-big" href="/api/google/start?link=1"><Cloud size={19}/>เชื่อม Google ของฉัน</a>
     <p className="sc-note">เดซี่เห็นเฉพาะไฟล์ที่เดซี่สร้างเอง ไม่เห็นไฟล์อื่นใน Drive ของคุณ</p>
    </div>:<div className="sc-pane">

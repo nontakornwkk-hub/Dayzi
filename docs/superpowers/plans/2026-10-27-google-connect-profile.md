@@ -12,7 +12,7 @@
 - [x] Run focused tests, full tests and production build; review the diff, commit and push.
 - [x] Verify Vercel deployment and request the owner's Google consent for the real first connection.
 
-**Production setup:** The owner selected the Google account and completed consent. Existing OAuth credentials were added as Production Secrets in Vercel. Google OAuth is currently in Testing with the selected account listed as a test user.
+**Production setup:** The owner selected the Google account and completed consent. Existing OAuth credentials were added as Production Secrets in Vercel. Google OAuth was switched from Testing to In production on 2026-10-29 so other Google users can consent to their own Dayzi storage. Requested scopes remain openid, email, profile and drive.file.
 
 **Verification:** Full test suite: 148 passed. Production build and independent code review passed. Changes stay in the current checkout to preserve the user's concurrent LINE sign-in work (committed separately as 8b10a5a); unrelated Netlify files are excluded.
 

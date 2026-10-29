@@ -21,7 +21,7 @@ export async function provisionUserStorage(accessToken,uid){
  const files=await post('https://www.googleapis.com/drive/v3/files?fields=id',{name:'ไฟล์',mimeType:'application/vnd.google-apps.folder',parents:[root.id]});
  const book=await post('https://sheets.googleapis.com/v4/spreadsheets?fields=spreadsheetId',{properties:{title:'Dayzi'}});
  try{await googleFetch(accessToken,`https://www.googleapis.com/drive/v3/files/${book.spreadsheetId}?addParents=${root.id}&removeParents=root&fields=id`,{method:'PATCH'});}catch{/* tidiness only: the sheet still works in My Drive */}
- const ids={spreadsheetId:book.spreadsheetId,folderId:files.id};
+ const ids={spreadsheetId:book.spreadsheetId,folderId:files.id,rootFolderId:root.id};
  await initializeStorage(accessToken,ids,uid);
- return {ids,sheetUrl:`https://docs.google.com/spreadsheets/d/${ids.spreadsheetId}/edit`,folderUrl:`https://drive.google.com/drive/folders/${ids.folderId}`};
+ return {ids,sheetUrl:`https://docs.google.com/spreadsheets/d/${ids.spreadsheetId}/edit`,folderUrl:`https://drive.google.com/drive/folders/${ids.folderId}`,rootFolderUrl:`https://drive.google.com/drive/folders/${root.id}`};
 }

@@ -6,6 +6,12 @@ test('receipt reader returns satang, validated date and a known category from Ge
  const result=await readReceiptImage({image:'QUJD',mimeType:'image/jpeg'},{client,config,today:'2026-10-27'});
  assert.equal(result.amount,123450);assert.equal(result.date,'2026-10-25');assert.equal(result.dateDetected,true);assert.equal(result.category,'food');
  assert.equal(request.config.responseMimeType,'application/json');assert.equal(request.contents[0].parts[1].inlineData.data,'QUJD');
+ assert.equal(request.config.thinkingConfig.thinkingLevel,'MINIMAL');
+});
+
+test('receipt reader retries one temporary model outage',async()=>{
+ let calls=0;const client={models:{generateContent:async()=>{if(++calls===1)throw Object.assign(new Error('busy'),{status:503});return {text:'{"amount":25,"title":"Test","category":"other"}'};}}};
+ const result=await readReceiptImage({image:'QUJD',mimeType:'image/png'},{client,config});assert.equal(result.amount,2500);assert.equal(calls,2);
 });
 test('receipt reader never trusts bad model output or oversized and non-image input',async()=>{
  const bad=cleanReceipt({amount:-5,date:'2026-02-31',title:'',documentType:'x',category:'hack'},'2026-10-27');

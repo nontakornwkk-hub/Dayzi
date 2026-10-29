@@ -33,7 +33,8 @@ test('provisioning creates Dayzi folder, files folder and sheet inside the user 
   return new Response('{}',{status:404});};
  try{
   const result=await provisionUserStorage('user-token',lineUid);
-  assert.deepEqual(result.ids,{spreadsheetId:'book-1',folderId:'files-folder'});
+  assert.deepEqual(result.ids,{spreadsheetId:'book-1',folderId:'files-folder',rootFolderId:'root-folder'});
+  assert.match(result.rootFolderUrl,/folders\/root-folder$/);
   assert.match(result.sheetUrl,/spreadsheets\/d\/book-1\/edit$/);assert.match(result.folderUrl,/folders\/files-folder$/);
   assert.ok(calls.some(([m,u,b])=>m==='POST'&&u.includes('/drive/v3/files')&&b?.parents?.[0]==='root-folder'));
   assert.ok(calls.every(([,u])=>!u.includes('script.google.com')));
@@ -57,6 +58,12 @@ test('AI chat has no daily message ceiling but still rejects a rapid repeat',()=
  assert.equal(reg.saved[0].aiCount,1001);
  const burst=registry([{uid:lineUid,version:1,aiDay:today,aiCount:1001,aiLast:Date.now()}]);
  assert.equal(burst.call({action:'aiQuota',uid:lineUid}).status,429);
+});
+
+test('Google reconnect restores the previous storage after disconnect without resetting data',()=>{
+ const account={uid:lineUid,authProvider:'line',email:'me@example.com',version:4,revision:12,line:null,connection:{auth:'oauth',status:'disconnected',spreadsheetId:'old-sheet',folderId:'old-folder'}};
+ const reg=registry([account]);const r=reg.call({action:'oauth',uid:lineUid,email:'me@example.com',name:'ต้น',encryptedToken:'fresh-token',restoreConnection:true});
+ assert.equal(r.error,undefined);const restored=reg.saved[0];assert.equal(restored.connection.status,'ready');assert.equal(restored.connection.spreadsheetId,'old-sheet');assert.equal(restored.revision,12);assert.equal(restored.line,lineUid.slice(5));
 });
 test('registry onboarding no longer builds storage in the owner Drive',()=>{
  const reg=registry(),result=reg.call({action:'lineOnboard',uid:lineUid,lineId:lineUid.slice(5),name:'ต้น'});

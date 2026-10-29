@@ -27,13 +27,13 @@ test('Google reconnect keeps LINE identity, refresh token and existing storage a
  t.mock.method(globalThis,'fetch',async(url,options)=>{assert.equal(String(url),vars.REGISTRY_URL);const p=JSON.parse(options.body);calls.push(p);return Response.json(p.action==='get'?existing:{ok:true});});
  try{
   const state=signSession({sub:'state',verifier:'verifier',link:uid,linkSession:true},vars.SESSION_SECRET);
-  const originalSession=signSession({sub:uid,provider:'line'},vars.SESSION_SECRET);
+  const originalSession=signSession({sub:uid,provider:'line',picture:'https://profile.line-scdn.net/line-photo'},vars.SESSION_SECRET);
   const r=await handler(new Request('https://dayzi.test/api/google/callback?state=state&code=code',{headers:{Cookie:'dayzi_oauth='+state+'; dayzi_session='+originalSession}}));
   assert.equal(r.headers.get('location'),'/?googleLinked=1');
   assert.deepEqual(calls.map(p=>p.action),['get','oauth']);assert.equal(calls[1].encryptedToken,existing.encryptedToken);
   const cookie=r.headers.getSetCookie().find(c=>c.startsWith('dayzi_session='));assert.ok(cookie);
   const session=verifySession(cookie.split(';')[0].slice('dayzi_session='.length),vars.SESSION_SECRET);
-  assert.equal(session.sub,uid);assert.equal(session.provider,'line');assert.equal(session.picture,'https://lh3.googleusercontent.com/photo');
+  assert.equal(session.sub,uid);assert.equal(session.provider,'line');assert.equal(session.picture,'https://profile.line-scdn.net/line-photo');
   const count=calls.length,otherSession=signSession({sub:'line:U'+'b'.repeat(32),provider:'line'},vars.SESSION_SECRET);
   const switched=await handler(new Request('https://dayzi.test/api/google/callback?state=state&code=code',{headers:{Cookie:'dayzi_oauth='+state+'; dayzi_session='+otherSession}}));
   assert.equal(switched.headers.get('location'),'/?error=google&step=state');assert.equal(calls.length,count);assert.equal(switched.headers.getSetCookie().some(c=>c.startsWith('dayzi_session=')),false);

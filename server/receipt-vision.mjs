@@ -27,7 +27,7 @@ export async function readReceiptImage({image,mimeType},{client,config=geminiCon
  if(typeof image!=='string'||!image||image.length>MAX_BASE64||!/^[A-Za-z0-9+/=]+$/.test(image))throw Object.assign(new Error('รูปไม่ถูกต้องหรือใหญ่เกินไป'),{status:400});
  if(!['image/jpeg','image/png','image/webp'].includes(mimeType))throw Object.assign(new Error('รองรับเฉพาะ JPG, PNG, WebP'),{status:400});
  let result;
- try{result=await withGeminiKey(ai=>ai.models.generateContent({model:config.model,contents:[{role:'user',parts:[{text:PROMPT},{inlineData:{mimeType,data:image}}]}],config:{responseMimeType:'application/json',responseSchema:schema,maxOutputTokens:600,temperature:0}}),{client});}
+ try{const generate=()=>withGeminiKey(ai=>ai.models.generateContent({model:config.model,contents:[{role:'user',parts:[{text:PROMPT},{inlineData:{mimeType,data:image}}]}],config:{responseMimeType:'application/json',responseSchema:schema,maxOutputTokens:1200,temperature:0,thinkingConfig:{thinkingLevel:'MINIMAL'},httpOptions:{timeout:25000}}}),{client});try{result=await generate();}catch(e){if(![500,502,503,504].includes(Number(e.status)))throw e;result=await generate();}}
  catch(e){throw Object.assign(new Error(e.status===429?'Gemini คิวเต็มชั่วคราว ลองใหม่อีกครั้งนะคะ':'เดซี่อ่านรูปไม่สำเร็จ ลองใหม่อีกครั้งนะคะ'),{status:e.status===429?429:502});}
  let parsed;try{parsed=JSON.parse(result?.text??'');}catch{throw Object.assign(new Error('เดซี่อ่านรูปนี้ไม่ออก ลองรูปที่ชัดขึ้นนะคะ'),{status:502});}
  return cleanReceipt(parsed,today);
