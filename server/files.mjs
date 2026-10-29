@@ -2,6 +2,14 @@ import {registry} from './registry.mjs';
 import {googleFetch} from './google.mjs';
 import {env,encryptSecret,decryptSecret} from './security.mjs';
 export const CHUNK_SIZE=3*1024*1024;
+export async function uploadSmallFile(account,token,file){
+ if(!/^[\w-]{1,100}$/.test(file.id??'')||typeof file.name!=='string'||!file.name.trim()||file.bytes.length>CHUNK_SIZE)throw fail('ข้อมูลไฟล์ไม่ถูกต้อง');
+ const boundary='dayzi-'+crypto.randomUUID(),metadata=JSON.stringify({name:file.name.slice(0,200),parents:[account.connection.folderId]}),type=mime(file.mimeType);
+ const body=Buffer.concat([Buffer.from(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: ${type}\r\n\r\n`),file.bytes,Buffer.from(`\r\n--${boundary}--\r\n`)]);
+ const result=await googleFetch(token,'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Content-Type':`multipart/related; boundary=${boundary}`},body}).then(r=>r.json());
+ if(!result.id)throw fail('Drive ยังไม่ส่งรหัสไฟล์กลับมา',502);
+ await registry('registerUpload',account.uid,{connectionVersion:account.version,file:{id:file.id,driveId:result.id}});return {driveId:result.id,done:true};
+}
 const fail=(message,status=400)=>Object.assign(new Error(message),{status});
 const mime=value=>/^[\w.+-]+\/[\w.+-]+$/.test(value??'')?value:'application/octet-stream';
 export async function trashDriveFile(account,token,file,trashed=true){

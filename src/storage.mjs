@@ -3,16 +3,19 @@ export async function api(path,options={}) {
   const data=await res.json().catch(()=>({error:'ยังไม่พร้อมเชื่อมต่อระบบออนไลน์'}));
   if(!res.ok)throw Object.assign(new Error(data.error??'เชื่อมต่อไม่สำเร็จ'),{status:res.status});return data;
 }
-export async function uploadCloudFile(file,id){
+export async function uploadCloudFile(file,id,onProgress=()=>{}){
+  onProgress(0);
+  if(file.size<=3*1024*1024){const res=await fetch(`/api/upload?id=${encodeURIComponent(id)}`,{method:'POST',credentials:'same-origin',headers:{'Content-Type':file.type||'application/octet-stream','X-File-Name':encodeURIComponent(file.name)},body:file});const result=await res.json();if(!res.ok)throw new Error(result.error??'อัปโหลดไม่สำเร็จ');onProgress(100);return result;}
   const session=await api('upload/start',{method:'POST',body:JSON.stringify({id,name:file.name,size:file.size,mimeType:file.type})});
   let offset=0;
   do {
     const response=await fetch(`/api/upload/chunk?offset=${offset}`,{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/octet-stream','X-Upload-Ticket':session.ticket},body:file.slice(offset,offset+session.chunkSize)});
     const result=await response.json();
     if(!response.ok)throw new Error(result.error??'อัปโหลดไฟล์ไม่สำเร็จ');
-    if(result.done)return result;
+    if(result.done){onProgress(100);return result;}
     if(!Number.isSafeInteger(result.offset)||result.offset<=offset||result.offset>file.size)throw new Error('การอัปโหลดสะดุด กรุณาเลือกไฟล์แล้วลองใหม่');
     offset=result.offset;
+    onProgress(Math.round(offset/file.size*100));
   }while(offset<=file.size);
 }
 export async function streamAssistant(path,payload,onText){

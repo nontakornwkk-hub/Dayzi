@@ -4,6 +4,12 @@ import * as uploads from '../server/files.mjs';
 import {encryptSecret} from '../server/security.mjs';
 const key=Buffer.alloc(32,9).toString('base64');
 const account={uid:'alice',version:2,connection:{folderId:'folder-a'}};
+test('small uploads use one Drive multipart request and register the result for the authenticated account',async t=>{
+ const old={REGISTRY_URL:process.env.REGISTRY_URL,REGISTRY_SECRET:process.env.REGISTRY_SECRET};process.env.REGISTRY_URL='https://registry.test/exec';process.env.REGISTRY_SECRET='test-secret';const calls=[];
+ t.mock.method(globalThis,'fetch',async(url,options)=>{calls.push({url:String(url),options});return Response.json(String(url).includes('googleapis.com')?{id:'new-drive-id'}:{ok:true});});
+ try{assert.equal((await uploads.uploadSmallFile(account,'access',{id:'small-file',name:'งาน.txt',mimeType:'text/plain',bytes:Buffer.from('hello')})).driveId,'new-drive-id');assert.equal(calls.length,2);assert.match(calls[0].url,/uploadType=multipart/);assert.match(calls[0].options.body.toString(),/"parents":\["folder-a"\]/);const registration=JSON.parse(calls[1].options.body);assert.equal(registration.uid,'alice');assert.equal(registration.connectionVersion,2);assert.equal(registration.file.driveId,'new-drive-id');}
+ finally{for(const [k,v]of Object.entries(old))if(v===undefined)delete process.env[k];else process.env[k]=v;}
+});
 test('upload sessions accept large files and hide the Google upload URL',async()=>{
  const result=await uploads.startUpload(account,'google-secret',{id:'file-a',name:'large.zip',size:30*1024*1024,mimeType:'application/zip'},{key,fetchImpl:async(url,options)=>{
   assert.equal(JSON.parse(options.body).parents[0],'folder-a');
