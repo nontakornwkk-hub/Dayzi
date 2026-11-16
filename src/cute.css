@@ -1,0 +1,121 @@
+/* Dayzi "cute" layer: soft pastel colours, rounder shapes and gentle motion.
+   Loaded last so it can refine earlier sheets without editing them.
+   Colour rules are scoped to the light theme; shape and motion rules apply to both. */
+
+:root{
+ --cute-accent:#8a63d2;
+ --cute-accent-2:#b48cf0;
+ --cute-pink:#ff9ec7;
+ --cute-butter:#ffd98a;
+ --cute-mint:#8fdcb5;
+ --cute-ink:#2f2a3a;
+ --cute-radius:22px;
+ --cute-shadow:0 1px 2px rgba(138,99,210,.06),0 10px 28px rgba(138,99,210,.10);
+ --cute-shadow-hover:0 2px 4px rgba(138,99,210,.08),0 16px 36px rgba(138,99,210,.16);
+ --bounce:cubic-bezier(.34,1.56,.64,1);
+}
+
+/* ---------- Page background: pastel glow instead of flat grey ---------- */
+:root:not([data-theme=dark]) body{
+ background:
+  radial-gradient(900px 500px at 8% -10%,#f6eaff 0,rgba(246,234,255,0) 60%),
+  radial-gradient(700px 420px at 105% 0%,#fff3dc 0,rgba(255,243,220,0) 60%),
+  radial-gradient(800px 600px at 60% 110%,#e9f8f0 0,rgba(233,248,240,0) 60%),
+  #faf8fd;
+ background-attachment:fixed;
+}
+:root:not([data-theme=dark]) .topbar{background:rgba(255,255,255,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom-color:rgba(138,99,210,.10)}
+:root:not([data-theme=dark]) .sidebar{background:rgba(255,255,255,.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-right-color:rgba(138,99,210,.10)}
+
+/* ---------- Sidebar navigation ---------- */
+.nav-item{border-radius:16px;transition:background .2s,color .2s,transform .25s var(--bounce)}
+.nav-item:hover{transform:translateX(3px)}
+.nav-item:active{transform:scale(.97)}
+:root:not([data-theme=dark]) .nav-item.active{background:linear-gradient(135deg,#efe5ff,#fde9f4);color:#5b3fa0;box-shadow:inset 0 0 0 1px rgba(138,99,210,.12),0 6px 16px rgba(138,99,210,.12)}
+:root:not([data-theme=dark]) .nav-item.active svg{color:var(--cute-accent)}
+:root:not([data-theme=dark]) .nav-item small{background:linear-gradient(135deg,var(--cute-pink),#ffb8d6);color:#fff;font-weight:700;border-radius:999px;padding:2px 7px}
+
+/* ---------- Cards ---------- */
+.card,.stat-card,.dash-panel{border-radius:var(--cute-radius)!important}
+:root:not([data-theme=dark]) .card,:root:not([data-theme=dark]) .stat-card{border-color:rgba(138,99,210,.10)!important;box-shadow:var(--cute-shadow)}
+.stat-card{transition:transform .3s var(--bounce),box-shadow .2s}
+.stat-card:hover{transform:translateY(-3px)}
+:root:not([data-theme=dark]) .stat-card:hover{box-shadow:var(--cute-shadow-hover)}
+.stat-card:active{transform:translateY(0) scale(.98)}
+.stat-icon{border-radius:14px!important;transition:transform .35s var(--bounce)}
+.stat-card:hover .stat-icon{transform:rotate(-8deg) scale(1.08)}
+/* Each overview stat gets a soft tinted wash matching its icon. */
+:root:not([data-theme=dark]) .stat-card:nth-child(1){background:linear-gradient(160deg,#fff 40%,#f4eeff)}
+:root:not([data-theme=dark]) .stat-card:nth-child(2){background:linear-gradient(160deg,#fff 40%,#eaf8f1)}
+:root:not([data-theme=dark]) .stat-card:nth-child(3){background:linear-gradient(160deg,#fff 40%,#fff0f4)}
+:root:not([data-theme=dark]) .stat-card:nth-child(4){background:linear-gradient(160deg,#fff 40%,#fff7e3)}
+
+/* ---------- Buttons ---------- */
+.primary-button,.secondary-button,.danger-button,.icon-button,.text-button{transition:transform .25s var(--bounce),box-shadow .2s,background .2s,filter .2s}
+.primary-button:active,.secondary-button:active,.icon-button:active{transform:scale(.95)}
+:root:not([data-theme=dark]) .primary-button{background:linear-gradient(135deg,var(--cute-accent-2),var(--cute-accent));color:#fff;border:0;box-shadow:0 6px 16px rgba(138,99,210,.30)}
+:root:not([data-theme=dark]) .primary-button svg{color:#fff}
+:root:not([data-theme=dark]) .primary-button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 22px rgba(138,99,210,.36);filter:brightness(1.04)}
+:root:not([data-theme=dark]) .primary-button:disabled{background:#e4daf6;color:#9a8cb4;box-shadow:none}
+[data-theme=dark] .primary-button{background:linear-gradient(135deg,#9b7ae0,#7a55c8);color:#fff;border:0}
+:root:not([data-theme=dark]) .secondary-button{background:#fff;border-color:rgba(138,99,210,.18)}
+:root:not([data-theme=dark]) .secondary-button:hover{background:#f7f2ff}
+
+/* ---------- Greeting ---------- */
+.wave{display:inline-block;transform-origin:70% 70%;animation:cute-wiggle 2.6s ease-in-out 1s 2}
+@keyframes cute-wiggle{0%,60%,100%{transform:rotate(0)}10%,30%{transform:rotate(14deg)}20%,40%{transform:rotate(-8deg)}}
+:root:not([data-theme=dark]) .eyebrow{color:var(--cute-accent)}
+
+/* ---------- Tasks: friendlier checkboxes ---------- */
+.checkbox{transition:transform .3s var(--bounce),background .2s,border-color .2s}
+.checkbox:hover{transform:scale(1.12)}
+.checkbox:active{transform:scale(.9)}
+/* A finished task in the calendar side panel shows a filled tick (it used to look empty). */
+.panel-task.done .checkbox{background:var(--done,#3f9d74);border-color:var(--done,#3f9d74);color:#fff;display:grid;place-items:center}
+.panel-task.done .checkbox svg{color:#fff;stroke:#fff}
+
+/* ---------- Calendar month cells ---------- */
+/* "+N more" and "N tasks" share one row so busy days are not clipped. */
+.cell-more-row{display:flex;flex-wrap:nowrap;align-items:center;gap:4px;min-width:0;overflow:hidden;flex-shrink:0}
+.cell-more-row>button{flex-shrink:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:2px!important;padding-right:2px!important}
+.day-cell.is-today .day-number{background:linear-gradient(135deg,var(--cute-accent-2),var(--cute-accent))!important;color:#fff!important;box-shadow:0 4px 10px rgba(138,99,210,.30)}
+
+/* ---------- Floating mascot: gentle idle bob ---------- */
+@media (prefers-reduced-motion:no-preference){
+ .mascot-body img{animation:cute-bob 3.6s ease-in-out infinite}
+ .chat-hero img{animation:cute-bob 3.6s ease-in-out infinite}
+}
+@keyframes cute-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* ---------- Finance month stepper ---------- */
+.month-stepper{display:inline-flex;align-items:center;gap:6px;padding:4px;border-radius:999px;background:var(--card,#fff);border:1px solid var(--hair,#ece8f2)}
+.month-stepper strong{min-width:128px;text-align:center;font-size:13px;font-weight:650}
+.month-stepper .icon-button{border-radius:999px}
+.month-stepper .text-button{padding:4px 10px;font-size:12px}
+:root:not([data-theme=dark]) .month-stepper{box-shadow:var(--cute-shadow)}
+[data-theme=dark] .month-stepper{background:#2a2533;border-color:#3a3346}
+
+/* ---------- Inputs and focus ---------- */
+:root:not([data-theme=dark]) input:not([type=checkbox]):not([type=radio]):focus-visible,
+:root:not([data-theme=dark]) textarea:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(180,140,240,.35)}
+:focus-visible{outline-color:var(--cute-accent-2)}
+
+/* ---------- Chat suggestion chips ---------- */
+.chat-hero button,.chat-suggestions button{transition:transform .25s var(--bounce),box-shadow .2s}
+.chat-hero button:hover,.chat-suggestions button:hover{transform:translateY(-2px)}
+:root:not([data-theme=dark]) .chat-hero button:hover,:root:not([data-theme=dark]) .chat-suggestions button:hover{box-shadow:var(--cute-shadow-hover)}
+
+@media (prefers-reduced-motion:reduce){
+ *,*::before,*::after{animation:none!important;transition:none!important}
+}
+
+/* ---------- Dark theme fixes ---------- */
+/* Task-count badge was light text on a light pill. */
+[data-theme=dark] .nav-item small{background:linear-gradient(135deg,#e77fb0,#c56aa0);color:#fff;font-weight:700;border-radius:999px;padding:2px 7px}
+/* Overview date chip was a white block on the dark page. */
+[data-theme=dark] .heading-date{background:#2a2533;border-color:#3a3346;color:#c9c0da}
+[data-theme=dark] .heading-date svg{color:#b69ae6}
+/* Divider above "add today" was a bright white line. */
+[data-theme=dark] .see-all{border-top-color:#3a3346;color:#b69ae6}
+:root:not([data-theme=dark]) .see-all{color:var(--cute-accent);border-radius:0 0 14px 14px}
+.see-all:hover{filter:brightness(1.1)}
