@@ -141,10 +141,15 @@ export async function handleLineWebhook(request,options={}) {
         }
       }
     } catch(error) {
+      if(!(error instanceof NeedConnect))console.error('[line] event failed',event.type,error?.status??'',error?.message??error);
       if(error instanceof NeedConnect)reply=connectReply(origin,linkUid);
       else reply=error.status===429?'เดซี่รับข้อความครบโควตาชั่วคราวแล้วค่ะ ลองอีกครั้งภายหลังนะคะ':'ยังทำรายการไม่สำเร็จค่ะ เจ้าของระบบอาจยังตั้งค่าพื้นที่เก็บข้อมูลหรือ Gemini ไม่ครบ กรุณาลองใหม่ภายหลัง';
     }
-    await fetchImpl('https://api.line.me/v2/bot/message/reply',{method:'POST',headers:{Authorization:`Bearer ${channelToken}`,'Content-Type':'application/json'},body:JSON.stringify({replyToken:event.replyToken,messages:[typeof reply==='string'?{type:'text',text:reply.slice(0,4900)}:reply]})});
+    try{
+      const sent=await fetchImpl('https://api.line.me/v2/bot/message/reply',{method:'POST',headers:{Authorization:`Bearer ${channelToken}`,'Content-Type':'application/json'},body:JSON.stringify({replyToken:event.replyToken,messages:[typeof reply==='string'?{type:'text',text:reply.slice(0,4900)}:reply]})});
+      // LINE rejects silently from the user's side (bad token, bad card): log it so the cause is visible in Vercel.
+      if(sent&&sent.ok===false)console.error('[line] reply rejected',sent.status,(await sent.text().catch(()=>'')).slice(0,500));
+    }catch(e){console.error('[line] reply request failed',e?.message??e);}
     for(const task of afterReply.splice(0))await task().catch(()=>{});
   }
   return json({ok:true});
